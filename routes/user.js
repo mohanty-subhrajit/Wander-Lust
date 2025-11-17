@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const wrapAsync = require("../utils/wrapAsync.js");
 const passport = require("passport");
-const { saveRedirectUrl } = require("../middleware.js");
+const { saveRedirectUrl, isLoggedIn, isAdmin } = require("../middleware.js");
 const userController = require("../controllers/users.js");
 
 router
@@ -23,5 +23,9 @@ router
   );
 
 router.get("/logout", userController.logout);
+
+// Admin routes for user management
+router.get("/users/admin/users", isLoggedIn, isAdmin, wrapAsync(userController.allUsers));
+router.delete("/users/admin/users/:id", isLoggedIn, isAdmin, wrapAsync(userController.deleteUser));
 
 module.exports = router;

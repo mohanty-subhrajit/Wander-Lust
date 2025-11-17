@@ -12,9 +12,14 @@ const  userSchema = new Schema({
     googleId:{
         type:String,
         default:null
+    },
+    
+    isAdmin:{
+        type:Boolean,
+        default:false
     }
     
-});
+}, { timestamps: true });
 
 userSchema.plugin(passportLocalMongoose);
 

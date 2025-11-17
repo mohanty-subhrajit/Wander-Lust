@@ -6,7 +6,20 @@ const geocodingClient= mbxGeocoding({ accessToken: mapToken });
 
 // Index - Show all listings
 module.exports.index = async (req, res) => {
-  const allListings = await Listing.find({});
+  const { category, search } = req.query;
+  let filter = {};
+  
+  // Filter by category
+  if (category && category !== 'all') {
+    filter.category = category;
+  }
+  
+  // Search by country
+  if (search) {
+    filter.country = { $regex: search, $options: 'i' }; // Case-insensitive search
+  }
+  
+  const allListings = await Listing.find(filter);
   res.render("listings/index.ejs", { allListings });
 };
 

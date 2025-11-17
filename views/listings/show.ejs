@@ -26,17 +26,24 @@
         </div>
       </div>
       <br>
-      <!-- review form -->
-       
-     <% if(currUser && currUser._id.equals(listing.owner._id)){ %>
-      <div class="btns">
-
-        <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark col-1 offset-3 edit-btn">Edit </a>
-
-        <form method="POST" action="/listings/<%=listing._id%>?_method=DELETE">
-          <button class="btn btn-dark  offset-5">Delete </button>
-      </div>
-      <% }%>
+      <!-- Booking and Edit/Delete buttons -->
+      
+      <% if(currUser) { %>
+        <% if(currUser.isAdmin || currUser._id.equals(listing.owner._id)){ %>
+          <div class="btns">
+            <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark col-1 offset-3 edit-btn">Edit </a>
+            <form method="POST" action="/listings/<%=listing._id%>?_method=DELETE">
+              <button class="btn btn-dark offset-5">Delete </button>
+            </form>
+          </div>
+        <% } else { %>
+          <div class="text-center mb-3">
+            <a href="/bookings/listings/<%= listing._id %>/book" class="btn btn-success btn-lg">
+              <i class="fa-solid fa-calendar-check"></i> Book Now
+            </a>
+          </div>
+        <% } %>
+      <% } %>
       
       </form>
 

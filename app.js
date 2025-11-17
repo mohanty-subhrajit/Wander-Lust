@@ -2,7 +2,7 @@
 if(process.env.NODE_ENV !="production"){
   require('dotenv').config();
 }
-
+const port = process.env.PORT || 8080;
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
@@ -11,15 +11,18 @@ const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 // const {Error} = require("./utils/expressclass.js");
 const Review= require("./models/review.js");
-const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
+// const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
+const dbUrl= process.env.ATLASDB_URL;
 const listingsRouter = require("./routes/listing.js");
 const reviewsRouter = require("./routes/reviews.js");
+const bookingRouter = require("./routes/booking.js");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const flash =  require("connect-flash"); // importing flash
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user.js");
-const userRouter = require("./routes/user.js")
+const userRouter = require("./routes/user.js");
 
 
 
@@ -33,8 +36,21 @@ main()
   });
 
 async function main() {
-  await mongoose.connect(MONGO_URL);
+  await mongoose.connect(dbUrl);
 }
+
+// MongoDB session store
+const store = MongoStore.create({
+  mongoUrl: dbUrl,
+  crypto: {
+    secret: process.env.SECRET || "mysupersecretcode",
+  },
+  touchAfter: 24 * 3600, // lazy session update (in seconds)
+});
+
+store.on("error", function (e) {
+  console.log("SESSION STORE ERROR", e);
+});
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -46,7 +62,8 @@ app.use(express.static(path.join(__dirname, "/public")));
 
 //creating session.
 const sessionOptions = {
-  secret: "mysupersecretcode", // Corrected spelling of 'secret'
+  store,
+  secret: process.env.SECRET || "mysupersecretcode", // Corrected spelling of 'secret'
   resave: false,
   saveUninitialized: true, // Set to false for better security
 
@@ -80,8 +97,26 @@ app.use((req,res,next)=>{
   next();
 });
 
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   res.locals.currUser = req.user; // Make the current user available to all templates
+  
+  // Check if user has any bookings to manage (for their listings)
+  if (req.user) {
+    const Listing = require("./models/listing");
+    const Booking = require("./models/booking");
+    
+    const ownerListings = await Listing.find({ owner: req.user._id });
+    const listingIds = ownerListings.map(listing => listing._id);
+    const hasBookingsToManage = await Booking.countDocuments({ 
+      listing: { $in: listingIds },
+      status: "pending"
+    });
+    
+    res.locals.hasBookingsToManage = hasBookingsToManage > 0;
+  } else {
+    res.locals.hasBookingsToManage = false;
+  }
+  
   next();
 });
 
@@ -94,10 +129,30 @@ app.get("/demouser", async (req,res)=>{
   res.send(registerdUser);
 });
 
+// Create admin user if not exists
+async function createAdminUser() {
+  try {
+    const adminExists = await User.findOne({ username: "LAPU" });
+    if (!adminExists) {
+      const adminUser = new User({
+        email: "admin@wanderlust.com",
+        username: "LAPU",
+        isAdmin: true
+      });
+      await User.register(adminUser, "LAPU");
+      console.log("Admin user created successfully");
+    }
+  } catch (error) {
+    console.log("Error creating admin user:", error);
+  }
+}
+
+createAdminUser();
 
 
 app.use("/listings",listingsRouter);
 app.use("/listings/:id/reviews",reviewsRouter);
+app.use("/bookings", bookingRouter);
 app.use("/",userRouter);
 // app.get("/testListing", async (req, res) => {
 //   let sampleListing = new Listing({
@@ -124,7 +179,7 @@ app.use((err,req,res,next)=>{
 
 
 
-app.listen(8080, () => {
+app.listen(port, () => {
   console.log("server is listening to port 8080");
 });
 

@@ -23,7 +23,11 @@ const listingSchema = new Schema({
           : v,
     }
   },
-  price: Number,
+  price: {
+    type: Number,
+    required: true,
+    min: [300, 'Price must be at least ₹300']
+  },
   location: String,
   country: String,
   reviews:[
@@ -47,9 +51,9 @@ const listingSchema = new Schema({
       required: true
     },
   },
-  category :{
-    type:String,
-    enum:["mountains","Arctic","farms","Iconic cities","castles","camping","farm","Arctic","Boats House"]
+  category: {
+    type: String,
+    enum: ["Trending", "Rooms", "Iconic cities", "mountains", "castles", "Amazing Pools", "camping", "farms", "Arctic", "Boats House"]
   }
 });
 

@@ -38,10 +38,10 @@
 
      <div class="row">
          <div class="mb-3 col-md-4">
-      <label for="price" class="form-label">Price</label>
-      <input name="listing[price]" placeholder="1200" type="number" class="form-control"   required/>
+      <label for="price" class="form-label">Price (₹ per night)</label>
+      <input name="listing[price]" placeholder="Min ₹300" type="number" class="form-control" min="300" required/>
       <div class="valid-feedback">price looks good</div>
-          <div class="invalid-feedback">Please give a price</div>
+          <div class="invalid-feedback">Price must be at least ₹300</div>
       </div>
       
       <div class="mb-3 col-md-8">
@@ -61,12 +61,31 @@
         name="listing[location]"
         placeholder="Bhubaneswar"
         type="text"
+        class="form-control"
+        required
       />
-      <div class="valid-feedback"></div>
+      <div class="valid-feedback">Location looks good</div>
           <div class="invalid-feedback">Please give a location</div>
      </div>
 
-    
+     <div class="mb-3">
+        <label for="category" class="form-label">Category</label>
+        <select name="listing[category]" class="form-select" required>
+          <option value="" selected disabled>Select a category</option>
+          <option value="Trending">Trending</option>
+          <option value="Rooms">Rooms</option>
+          <option value="Iconic cities">Iconic Cities</option>
+          <option value="mountains">Mountains</option>
+          <option value="castles">Castles</option>
+          <option value="Amazing Pools">Amazing Pools</option>
+          <option value="camping">Camping</option>
+          <option value="farms">Farms</option>
+          <option value="Arctic">Arctic</option>
+          <option value="Boats House">Boats House</option>
+        </select>
+        <div class="valid-feedback">Category looks good</div>
+        <div class="invalid-feedback">Please select a category</div>
+     </div>
       
       
       <button class="btn btn-dark add-btn" type="submit">Add</button>
