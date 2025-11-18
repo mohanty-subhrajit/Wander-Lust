@@ -5,10 +5,12 @@ const Review = require("../models/review.js");
 module.exports.createReview = async (req, res) => {
   console.log("Creating review - req.user:", req.user);
   
-  if (!req.user || !req.user._id) {
+  if (!req.user || !req.user._id ) {
     req.flash("error", "You must be logged in to create a review");
     return res.redirect("/login");
   }
+
+
   
   let listing = await Listing.findById(req.params.id); 
   let newReview = new Review(req.body.review);

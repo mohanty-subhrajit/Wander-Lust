@@ -19,7 +19,7 @@ const User = require("./models/user");
 const Booking = require("./models/booking");
 
 // Database connection URL - Use Atlas if available, otherwise local
-const dbUrl = process.env.ATLASDB_URL || "mongodb://127.0.0.1:27017/wanderlust";
+const dbUrl = process.env.ATLASDB_URL ;
 
 // Connect to database
 async function connectDB() {

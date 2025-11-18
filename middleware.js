@@ -22,6 +22,7 @@ next();
     next();
   };
 
+  //chekiing the owners of the listing to
   module.exports.isOwner = async (req,res,next)=>{
     let {id} = req.params;
     let listing = await Listing.findById(id);
@@ -90,6 +91,10 @@ next();
     if (!review) {
       req.flash("error", "Review not found!");
       return res.redirect(`/listings/${id}`);
+    }
+    
+    if (res.locals.currUser && res.locals.currUser.isAdmin) {
+    return next();
     }
     
     if (!review.author || !review.author.equals(res.locals.currUser._id)) {
