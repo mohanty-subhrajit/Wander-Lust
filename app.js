@@ -2,7 +2,7 @@
 if(process.env.NODE_ENV !="production"){
   require('dotenv').config();
 }
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 10000;
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
@@ -183,7 +183,12 @@ app.use((err,req,res,next)=>{
 
 
 
-app.listen(port, () => {
-  console.log("server is listening to port 8080");
+// Bind to 0.0.0.0 for Render deployment
+const server = app.listen(port, '0.0.0.0', () => {
+  console.log(`server is listening to port ${port}`);
 });
+
+// Increase timeouts for Render (prevents 502 errors)
+server.keepAliveTimeout = 120000; // 120 seconds
+server.headersTimeout = 120000; // 120 seconds
 

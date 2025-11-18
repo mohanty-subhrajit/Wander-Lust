@@ -4,7 +4,6 @@ const { listingSchema, reviewSchema } = require("./schema.js");
 const ExpressError = require("./utils/ExpressError.js");
 const  Review = require("./models/review.js");
 
-
   module.exports.isLoggedIn=(req,res,next) =>{
      if(!req.isAuthenticated()){
     req.session.redirectUrl = req.originalUrl;
@@ -92,7 +91,7 @@ next();
       req.flash("error", "Review not found!");
       return res.redirect(`/listings/${id}`);
     }
-    
+
     if (res.locals.currUser && res.locals.currUser.isAdmin) {
     return next();
     }
