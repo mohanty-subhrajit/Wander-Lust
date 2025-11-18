@@ -30,38 +30,10 @@ module.exports.createBooking = async (req, res) => {
 
   const { checkIn, checkOut, guests } = req.body.booking;
   
-  // Server-side date validation
+  // Calculate total price
   const checkInDate = new Date(checkIn);
   const checkOutDate = new Date(checkOut);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  // Check if check-in date is in the past
-  if (checkInDate < today) {
-    req.flash("error", "Check-in date cannot be in the past!");
-    return res.redirect(`/bookings/listings/${id}/book`);
-  }
-  
-  // Check if check-out date is after check-in date
-  if (checkOutDate <= checkInDate) {
-    req.flash("error", "Check-out date must be after check-in date!");
-    return res.redirect(`/bookings/listings/${id}/book`);
-  }
-  
-  // Check if booking duration is reasonable (max 30 days)
   const days = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-  if (days > 30) {
-    req.flash("error", "Booking duration cannot exceed 30 days!");
-    return res.redirect(`/bookings/listings/${id}/book`);
-  }
-  
-  // Validate number of guests
-  if (guests < 1 || guests > 20) {
-    req.flash("error", "Number of guests must be between 1 and 20!");
-    return res.redirect(`/bookings/listings/${id}/book`);
-  }
-  
-  // Calculate total price
   const totalPrice = days * listing.price;
 
   const newBooking = new Booking({

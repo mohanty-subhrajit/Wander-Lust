@@ -8,12 +8,12 @@
   <body>
     <div class="row mt-4">
 
-      <div class="col-8 offset-2">
+      <div class="col-12 col-md-8 offset-md-2">
         <h3>
           <%= listing.title %>
         </h3>
       </div>
-      <div class="card col-6 offset-3 show-card listing-card">
+      <div class="card col-12 col-md-8 offset-md-2 col-lg-6 offset-lg-3 show-card listing-card">
         <img src="<%=listing.image.url%>" class="card-img-top show-image" alt="listing_image">
         <div class="card-body">
           <p class="card-text">Owend By  <i><%=listing.owner.username%></i> </p>
@@ -57,7 +57,7 @@
 
 <!-- Review form -->
   <% if(currUser) { %>
-  <div class="col-8 offset-2">
+  <div class="col-12 col-md-10 offset-md-1 col-lg-8 offset-lg-2">
     <h4>Leave a Review</h4>
     <form  method="POST" action="/listings/<%= listing._id %>/reviews"  novalidate class="needs-validation mb-3">
 
@@ -93,7 +93,7 @@
 
     <% for(review of listing.reviews) { %>
 
-     <div class="card col-5 ms-3 mb-3">
+     <div class="card col-12 col-md-5 ms-md-3 mb-3">
       <div class="card-body">
        
         <h5 class="card-title"><%= review.author ? review.author.username : 'Anonymous' %></h5>
@@ -120,7 +120,7 @@
     <% }%>
 </div>
 <!-- map -->
-<div class="col-6 offset-3 mb-3">
+<div class="col-12 col-md-10 offset-md-1 col-lg-8 offset-lg-2 mb-3">
   <h3>Where you'll be</h3>
   <div id="map">
     

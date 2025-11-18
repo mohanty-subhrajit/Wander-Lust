@@ -9,56 +9,101 @@
       No users found.
     </div>
   <% } else { %>
-    <div class="table-responsive">
-      <table class="table table-striped table-hover">
-        <thead class="table-dark">
-          <tr>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Admin</th>
-            <th>Joined</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% for(let user of users) { %>
+    <!-- Desktop Table View -->
+    <div class="d-none d-md-block">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead class="table-dark">
             <tr>
-              <td>
-                <strong><%= user.username %></strong>
-                <% if(user.username === 'LAPU') { %>
-                  <span class="badge bg-primary ms-2">Admin</span>
-                <% } %>
-              </td>
-              <td><%= user.email || 'N/A' %></td>
-              <td>
-                <% if(user.isAdmin) { %>
-                  <i class="fa-solid fa-check text-success"></i> Yes
-                <% } else { %>
-                  <i class="fa-solid fa-times text-danger"></i> No
-                <% } %>
-              </td>
-              <td>
-                <% if(user.createdAt) { %>
-                  <%= new Date(user.createdAt).toLocaleDateString() %>
-                <% } else { %>
-                  N/A
-                <% } %>
-              </td>
-              <td>
-                <% if(user.username !== 'LAPU') { %>
-                  <form action="/users/admin/users/<%= user._id %>?_method=DELETE" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this user account? All their listings, bookings, and reviews will be permanently deleted.');">
-                    <button class="btn btn-sm btn-danger" title="Delete User">
-                      <i class="fa-solid fa-trash"></i> Delete User
-                    </button>
-                  </form>
-                <% } else { %>
-                  <span class="text-muted">Protected Account</span>
-                <% } %>
-              </td>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Admin</th>
+              <th>Joined</th>
+              <th>Actions</th>
             </tr>
-          <% } %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <% for(let user of users) { %>
+              <tr>
+                <td>
+                  <strong><%= user.username %></strong>
+                  <% if(user.username === 'LAPU') { %>
+                    <span class="badge bg-primary ms-2">Admin</span>
+                  <% } %>
+                </td>
+                <td><%= user.email || 'N/A' %></td>
+                <td>
+                  <% if(user.isAdmin) { %>
+                    <i class="fa-solid fa-check text-success"></i> Yes
+                  <% } else { %>
+                    <i class="fa-solid fa-times text-danger"></i> No
+                  <% } %>
+                </td>
+                <td>
+                  <% if(user.createdAt) { %>
+                    <%= new Date(user.createdAt).toLocaleDateString() %>
+                  <% } else { %>
+                    N/A
+                  <% } %>
+                </td>
+                <td>
+                  <% if(user.username !== 'LAPU') { %>
+                    <form action="/users/admin/users/<%= user._id %>?_method=DELETE" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this user account? All their listings, bookings, and reviews will be permanently deleted.');">
+                      <button class="btn btn-sm btn-danger" title="Delete User">
+                        <i class="fa-solid fa-trash"></i> Delete User
+                      </button>
+                    </form>
+                  <% } else { %>
+                    <span class="text-muted">Protected Account</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Mobile Card View -->
+    <div class="d-md-none">
+      <% for(let user of users) { %>
+        <div class="card mb-3">
+          <div class="card-body">
+            <h5 class="card-title">
+              <%= user.username %>
+              <% if(user.username === 'LAPU') { %>
+                <span class="badge bg-primary">Admin</span>
+              <% } %>
+            </h5>
+            <p class="card-text">
+              <strong>Email:</strong> <%= user.email || 'N/A' %><br>
+              <strong>Admin Status:</strong> 
+              <% if(user.isAdmin) { %>
+                <span class="text-success"><i class="fa-solid fa-check"></i> Yes</span>
+              <% } else { %>
+                <span class="text-danger"><i class="fa-solid fa-times"></i> No</span>
+              <% } %><br>
+              <strong>Joined:</strong> 
+              <% if(user.createdAt) { %>
+                <%= new Date(user.createdAt).toLocaleDateString() %>
+              <% } else { %>
+                N/A
+              <% } %>
+            </p>
+            <% if(user.username !== 'LAPU') { %>
+              <form action="/users/admin/users/<%= user._id %>?_method=DELETE" method="POST" onsubmit="return confirm('Are you sure you want to delete this user account? All their listings, bookings, and reviews will be permanently deleted.');">
+                <button class="btn btn-danger w-100">
+                  <i class="fa-solid fa-trash"></i> Delete User
+                </button>
+              </form>
+            <% } else { %>
+              <p class="text-muted mb-0">
+                <i class="fa-solid fa-shield-alt"></i> Protected Account
+              </p>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
     </div>
     
     <div class="alert alert-warning mt-4">
