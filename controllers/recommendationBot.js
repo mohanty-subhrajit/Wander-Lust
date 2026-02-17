@@ -143,7 +143,8 @@ async function generateResponse(conversation, userMessage) {
           "What's your budget per night? (e.g., 'under 5000' or '3000 to 8000')";
         conversation.context.step = 'price';
       } else {
-        botResponse = "I didn't catch the location. Could you specify the city or area? (e.g., 'Goa', 'Mumbai', 'Delhi')";
+        botResponse = "I didn't catch the location. Could you specify the city or area?\n\n" +
+          "Available locations: Mumbai, Delhi, Kashmir, Manali, Bali, London, Venice";
       }
       break;
       
@@ -171,6 +172,18 @@ async function generateResponse(conversation, userMessage) {
           "Let me find the best properties for you... 🔍";
         conversation.context.step = 'ready';
         recommendations = await findRecommendations(conversation.context);
+        
+        // Check if no properties found
+        if (!recommendations || recommendations.length === 0) {
+          botResponse = `Sorry, I couldn't find any properties matching your criteria:\n` +
+            `📍 Location: ${conversation.context.location || 'Any'}\n` +
+            `💰 Budget: ${conversation.context.minPrice !== undefined ? '₹' + conversation.context.minPrice.toLocaleString('en-IN') + ' - ₹' + conversation.context.maxPrice.toLocaleString('en-IN') : 'Any'}\n` +
+            `👥 Guests: ${conversation.context.guests || 'Any'}\n\n` +
+            "Try:\n" +
+            "• A different location (Bali, Mumbai, Delhi, Kashmir, London)\n" +
+            "• A higher budget\n" +
+            "Or type 'restart' to start over.";
+        }
       } else {
         botResponse = "How many guests? Please specify a number (e.g., '2' or '4 people')";
       }
@@ -179,10 +192,20 @@ async function generateResponse(conversation, userMessage) {
     case 'recommend':
       if (conversation.context.location || conversation.context.minPrice !== undefined || conversation.context.guests) {
         recommendations = await findRecommendations(conversation.context);
-        botResponse = "Here are my recommendations based on your preferences: 🎯";
+        
+        if (recommendations && recommendations.length > 0) {
+          botResponse = "Here are my recommendations based on your preferences: 🎯";
+        } else {
+          botResponse = `Sorry, I couldn't find any properties matching your criteria:\n` +
+            `📍 Location: ${conversation.context.location || 'Any'}\n` +
+            `💰 Budget: ${conversation.context.minPrice !== undefined ? '₹' + conversation.context.minPrice.toLocaleString('en-IN') + ' - ₹' + conversation.context.maxPrice.toLocaleString('en-IN') : 'Any'}\n` +
+            `👥 Guests: ${conversation.context.guests || 'Any'}\n\n` +
+            "Available locations: Mumbai, Delhi, Kashmir, Manali, London, Bali, Venice\n\n" +
+            "Type 'restart' to search again.";
+        }
       } else {
         botResponse = "I need more information to recommend properties. Let's start:\n\n" +
-          "Where would you like to stay? (e.g., 'Goa', 'Mumbai')";
+          "Where would you like to stay? (e.g., 'Mumbai', 'Delhi', 'Kashmir')";
         conversation.context.step = 'location';
       }
       break;
@@ -215,7 +238,15 @@ async function generateResponse(conversation, userMessage) {
         
         if (missing.length === 0) {
           recommendations = await findRecommendations(conversation.context);
-          botResponse = "Perfect! Here are my recommendations: 🎯";
+          
+          if (recommendations && recommendations.length > 0) {
+            botResponse = "Perfect! Here are my recommendations: 🎯";
+          } else {
+            botResponse = `Sorry, no properties found. Try:\n` +
+              "• Mumbai, Delhi, Kashmir, Manali (India)\n" +
+              "• London, Bali, Venice\n" +
+              "Or adjust your budget/preferences.";
+          }
         } else {
           botResponse = `Got it! I still need: ${missing.join(', ')}\n\n` +
             `Please provide the ${missing[0]}.`;
