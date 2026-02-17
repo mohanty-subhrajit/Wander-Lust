@@ -118,7 +118,9 @@
         // Show quick suggestions based on context
         showQuickSuggestions(data.context);
       } else {
-        addBotMessage('Sorry, I encountered an error. Please try again.');
+        const errorMessage = data.message || data.error || 'Sorry, I encountered an error. Please try again.';
+        addBotMessage(errorMessage);
+        console.error('Bot error:', data);
       }
     } catch (error) {
       console.error('Error sending message:', error);

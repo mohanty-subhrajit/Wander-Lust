@@ -310,21 +310,24 @@ module.exports.chat = async (req, res) => {
       botMessage: botResponse,
       recommendations: recommendations ? recommendations.map(listing => ({
         id: listing._id,
-        title: listing.title,
-        location: listing.location,
-        country: listing.country,
-        price: listing.price,
-        image: listing.image.url,
-        owner: listing.owner.username
+        title: listing.title || 'Untitled',
+        location: listing.location || 'Unknown',
+        country: listing.country || 'Unknown',
+        price: listing.price || 0,
+        image: listing.image?.url || 'https://via.placeholder.com/400x300?text=No+Image',
+        owner: listing.owner?.username || 'Unknown'
       })) : null,
       context: conversation.context
     });
     
   } catch (error) {
     console.error('Bot chat error:', error);
+    console.error('Error details:', error.message);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({ 
       success: false, 
-      error: 'Sorry, I encountered an error. Please try again.' 
+      error: 'Sorry, I encountered an error. Please try again.',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

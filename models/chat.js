@@ -40,8 +40,7 @@ const chatSchema = new Schema({
   }
 });
 
-// Index for faster queries
-chatSchema.index({ booking: 1 });
+// Index for faster queries (booking already has unique index, no need to add it again)
 chatSchema.index({ participants: 1 });
 
 const Chat = mongoose.model("Chat", chatSchema);
