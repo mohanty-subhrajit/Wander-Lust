@@ -118,14 +118,19 @@
         // Show quick suggestions based on context
         showQuickSuggestions(data.context);
       } else {
-        const errorMessage = data.message || data.error || 'Sorry, I encountered an error. Please try again.';
+        const errorMessage = data.error || 'Sorry, I encountered an error. Please try again.';
         addBotMessage(errorMessage);
-        console.error('Bot error:', data);
+        console.error('[BOT] Error response:', data);
+        
+        // If development environment shows details, log them
+        if (data.details) {
+          console.error('[BOT] Error details:', data.details);
+        }
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('[BOT] Network error:', error);
       hideTypingIndicator();
-      addBotMessage('Network error. Please check your connection and try again.');
+      addBotMessage('Unable to connect to the server. Please check your internet connection and try again.');
     } finally {
       // Re-enable input
       botSend.disabled = false;

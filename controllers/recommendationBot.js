@@ -251,14 +251,19 @@ async function findRecommendations(context) {
   }
   
   try {
-    const listings = await Listing.find(query)
-      .populate('owner')
-      .limit(5)
-      .sort({ price: 1 });
+    console.log('[BOT] Searching listings with query:', JSON.stringify(query));
     
+    const listings = await Listing.find(query)
+      .populate('owner', 'username')
+      .limit(5)
+      .sort({ price: 1 })
+      .lean();
+    
+    console.log('[BOT] Found', listings.length, 'listings');
     return listings;
   } catch (error) {
-    console.error('Error finding recommendations:', error);
+    console.error('[BOT] Error finding recommendations:', error.message);
+    console.error('[BOT] Stack:', error.stack);
     return [];
   }
 }
@@ -269,9 +274,20 @@ module.exports.chat = async (req, res) => {
     let { sessionId } = req.body;
     const { message } = req.body;
     
+    // Validate message
+    if (!message || typeof message !== 'string' || message.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide a valid message.'
+      });
+    }
+    
+    // Generate or validate sessionId
     if (!sessionId) {
       sessionId = uuidv4();
     }
+    
+    console.log('[BOT] Processing message:', message, 'Session:', sessionId);
     
     let conversation = await BotConversation.findOne({ sessionId });
     
@@ -292,7 +308,18 @@ module.exports.chat = async (req, res) => {
     });
     
     // Generate bot response
-    const { botResponse, recommendations } = await generateResponse(conversation, message);
+    let botResponse = '';
+    let recommendations = null;
+    
+    try {
+      const response = await generateResponse(conversation, message);
+      botResponse = response.botResponse;
+      recommendations = response.recommendations;
+      console.log('[BOT] Generated response:', botResponse.substring(0, 50) + '...');
+    } catch (generateError) {
+      console.error('[BOT] Error generating response:', generateError.message);
+      botResponse = "I'm having trouble processing your request. Could you try rephrasing that?";
+    }
     
     // Add bot response
     conversation.messages.push({
@@ -304,30 +331,79 @@ module.exports.chat = async (req, res) => {
     conversation.lastActivity = new Date();
     await conversation.save();
     
+    console.log('[BOT] Response generated successfully');
+    
+    // Safely map recommendations
+    let mappedRecommendations = null;
+    if (recommendations && Array.isArray(recommendations) && recommendations.length > 0) {
+      try {
+        mappedRecommendations = recommendations.map(listing => {
+          const id = listing._id ? listing._id.toString() : null;
+          const title = listing.title || 'Untitled Property';
+          const location = listing.location || 'Location not specified';
+          const country = listing.country || 'Country not specified';
+          const price = listing.price || 0;
+          
+          // Handle image safely
+          let imageUrl = 'https://images.unsplash.com/photo-1625505826533-5c80aca7d157?w=400';
+          if (listing.image && typeof listing.image === 'object') {
+            imageUrl = listing.image.url || imageUrl;
+          } else if (typeof listing.image === 'string') {
+            imageUrl = listing.image;
+          }
+          
+          // Handle owner safely
+          let ownerName = 'Host';
+          if (listing.owner) {
+            if (typeof listing.owner === 'object') {
+              ownerName = listing.owner.username || 'Host';
+            } else if (typeof listing.owner === 'string') {
+              ownerName = listing.owner;
+            }
+          }
+          
+          return {
+            id,
+            title,
+            location,
+            country,
+            price,
+            image: imageUrl,
+            owner: ownerName
+          };
+        });
+        console.log('[BOT] Mapped', mappedRecommendations.length, 'recommendations');
+      } catch (mapError) {
+        console.error('[BOT] Error mapping recommendations:', mapError.message);
+        mappedRecommendations = null;
+      }
+    }
+    
     res.json({
       success: true,
       sessionId: conversation.sessionId,
       botMessage: botResponse,
-      recommendations: recommendations ? recommendations.map(listing => ({
-        id: listing._id,
-        title: listing.title || 'Untitled',
-        location: listing.location || 'Unknown',
-        country: listing.country || 'Unknown',
-        price: listing.price || 0,
-        image: listing.image?.url || 'https://via.placeholder.com/400x300?text=No+Image',
-        owner: listing.owner?.username || 'Unknown'
-      })) : null,
+      recommendations: mappedRecommendations,
       context: conversation.context
     });
     
   } catch (error) {
-    console.error('Bot chat error:', error);
-    console.error('Error details:', error.message);
-    console.error('Stack trace:', error.stack);
+    console.error('[BOT] ❌ Fatal error:', error);
+    console.error('[BOT] Error name:', error.name);
+    console.error('[BOT] Error message:', error.message);
+    console.error('[BOT] Stack trace:', error.stack);
+    
+    // Send detailed error in development, generic in production
+    const isDev = process.env.NODE_ENV === 'development';
+    
     res.status(500).json({ 
       success: false, 
       error: 'Sorry, I encountered an error. Please try again.',
-      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: isDev ? {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      } : undefined
     });
   }
 };
