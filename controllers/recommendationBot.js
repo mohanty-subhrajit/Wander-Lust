@@ -6,24 +6,33 @@ const { v4: uuidv4 } = require('uuid');
 function detectIntent(message) {
   const lowerMsg = message.toLowerCase().trim();
   
-  // Greeting patterns
-  if (/(hi|hello|hey|start|help|assist)/i.test(lowerMsg)) {
+  // Greeting patterns - use word boundaries to avoid matching "delhi" (contains "hi")
+  if (/\b(hi|hello|hey|start|help|assist)\b/i.test(lowerMsg)) {
     return 'greeting';
   }
   
-  // Location patterns
-  if (/(in|at|near|location|place|city|country|area)/i.test(lowerMsg)) {
-    return 'location';
-  }
-  
-  // Price patterns
-  if (/(price|cost|budget|cheap|expensive|affordable|₹|rs)/i.test(lowerMsg)) {
+  // Price patterns - check if it's just a number or has price keywords
+  if (/(price|cost|budget|cheap|expensive|affordable|₹|rs)/i.test(lowerMsg) || /^\d+$/.test(lowerMsg)) {
     return 'price';
   }
   
-  // Guests patterns
-  if (/(guest|people|person|persons|travelers|family|group)/i.test(lowerMsg)) {
+  // Guests patterns - use word boundaries
+  if(/\b(guest|people|person|persons|travelers|family|group)\b/i.test(lowerMsg)) {
     return 'guests';
+  }
+  
+  // Location patterns - including standalone city names
+  const locationKeywords = ['in', 'at', 'near', 'location', 'place', 'city', 'country', 'area'];
+  const hasLocationKeyword = locationKeywords.some(keyword => lowerMsg.includes(keyword));
+  
+  // Common city/country names
+  const knownLocations = ['mumbai', 'delhi', 'goa', 'kashmir', 'manali', 'bangalore', 'chennai', 
+                          'kolkata', 'hyderabad', 'pune', 'bali', 'london', 'paris', 'venice', 
+                          'edinburgh', 'ireland', 'finland', 'india', 'uk', 'scotland'];
+  const isKnownLocation = knownLocations.some(loc => lowerMsg.includes(loc));
+  
+  if (hasLocationKeyword || (isKnownLocation && lowerMsg.split(' ').length <= 3)) {
+    return 'location';
   }
   
   // Show recommendations
@@ -61,6 +70,12 @@ function extractLocation(message) {
 // Extract price range from message
 function extractPrice(message) {
   const lowerMsg = message.toLowerCase();
+  
+  // Single number only (like "12000")
+  if (/^\d+$/.test(message.trim())) {
+    const price = parseInt(message.trim());
+    return { min: 0, max: price };
+  }
   
   // Pattern: "under 5000" or "below 5000"
   const underMatch = lowerMsg.match(/(?:under|below|less than|max|maximum)\s*₹?\s*(\d+)/);
@@ -124,6 +139,9 @@ async function generateResponse(conversation, userMessage) {
   let botResponse = "";
   let recommendations = null;
   
+  console.log(`[BOT] Intent detected: "${intent}" from message: "${userMessage}"`);
+  console.log('[BOT] Current context:', JSON.stringify(conversation.context));
+  
   switch (intent) {
     case 'greeting':
       botResponse = "Hi! 👋 I'm your property recommendation assistant. I can help you find the perfect place to stay!\n\n" +
@@ -153,14 +171,29 @@ async function generateResponse(conversation, userMessage) {
       if (priceRange) {
         conversation.context.minPrice = priceRange.min;
         conversation.context.maxPrice = priceRange.max;
-        botResponse = `Perfect! Budget: ₹${priceRange.min.toLocaleString('en-IN')} - ₹${priceRange.max.toLocaleString('en-IN')} per night. 💰\n\n` +
-          "How many guests? (e.g., '2 people' or '4')";
-        conversation.context.step = 'guests';
+        
+        // If we already have location, search now (guests is optional)
+        if (conversation.context.location) {
+          recommendations = await findRecommendations(conversation.context);
+          
+          if (recommendations && recommendations.length > 0) {
+            botResponse = `Perfect! Budget: ₹${priceRange.min.toLocaleString('en-IN')} - ₹${priceRange.max.toLocaleString('en-IN')} per night. 💰\n\n` +
+              "Here are my top recommendations: 🎯";
+          } else {
+            botResponse = `I set your budget to ₹${priceRange.min.toLocaleString('en-IN')} - ₹${priceRange.max.toLocaleString('en-IN')}, but couldn't find properties in ${conversation.context.location}.\n\n` +
+              "Try: Mumbai, Delhi, Kashmir, Manali, Bali, London, Venice";
+          }
+        } else {
+          botResponse = `Perfect! Budget: ₹${priceRange.min.toLocaleString('en-IN')} - ₹${priceRange.max.toLocaleString('en-IN')} per night. 💰\n\n` +
+            "Where would you like to stay? (e.g., Mumbai, Delhi, Kashmir)";
+          conversation.context.step = 'location';
+        }
       } else {
         botResponse = "Could you specify your budget? For example:\n" +
           "• 'under 5000'\n" +
           "• '3000 to 8000'\n" +
-          "• 'maximum 10000'";
+          "• 'maximum 10000'\n" +
+          "• Or just a number like '12000'";
       }
       break;
       
@@ -259,6 +292,9 @@ async function generateResponse(conversation, userMessage) {
           "Or type 'restart' to begin again.";
       }
   }
+  
+  console.log('[BOT] Generated response:', botResponse.substring(0, 100) + '...');
+  console.log('[BOT] Recommendations count:', recommendations ? recommendations.length : 0);
   
   return { botResponse, recommendations };
 }
