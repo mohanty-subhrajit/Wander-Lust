@@ -14,11 +14,29 @@ const bookingSchema = new Schema({
   },
   checkIn: {
     type: Date,
-    required: true
+    required: true,
+    validate: {
+      validator: function(value) {
+        // Set time to start of day for comparison
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const checkInDate = new Date(value);
+        checkInDate.setHours(0, 0, 0, 0);
+        return checkInDate >= today;
+      },
+      message: "Check-in date must be today or a future date"
+    }
   },
   checkOut: {
     type: Date,
-    required: true
+    required: true,
+    validate: {
+      validator: function(value) {
+        // Check-out must be after check-in
+        return value > this.checkIn;
+      },
+      message: "Check-out date must be after check-in date"
+    }
   },
   guests: {
     type: Number,

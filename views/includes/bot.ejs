@@ -1,0 +1,84 @@
+<!-- Recommendation Bot Widget -->
+<div id="botWidget" class="bot-widget">
+  <!-- Bot Toggle Button -->
+  <button id="botToggle" class="bot-toggle" aria-label="Open chat assistant">
+    <i class="fa-solid fa-robot"></i>
+    <span class="bot-badge" id="botBadge" style="display: none;">1</span>
+  </button>
+
+  <!-- Bot Chat Window -->
+  <div id="botWindow" class="bot-window" style="display: none;">
+    <!-- Bot Header -->
+    <div class="bot-header">
+      <div class="bot-header-info">
+        <i class="fa-solid fa-robot"></i>
+        <div>
+          <strong>Property Assistant</strong>
+          <small>Always here to help</small>
+        </div>
+      </div>
+      <div class="bot-header-actions">
+        <button id="botRestart" class="bot-action-btn" title="Restart conversation">
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+        <button id="botMinimize" class="bot-action-btn" title="Minimize">
+          <i class="fa-solid fa-minus"></i>
+        </button>
+        <button id="botClose" class="bot-action-btn" title="Close">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bot Messages -->
+    <div id="botMessages" class="bot-messages">
+      <div class="bot-message bot-msg">
+        <div class="bot-avatar">
+          <i class="fa-solid fa-robot"></i>
+        </div>
+        <div class="bot-bubble">
+          <p>Hi! 👋 I'm your property recommendation assistant.</p>
+          <p>I can help you find the perfect place to stay!</p>
+          <div class="bot-quick-actions">
+            <button class="bot-quick-btn" data-message="Hi, I need help finding a property">Get Started</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bot Recommendations -->
+    <div id="botRecommendations" class="bot-recommendations" style="display: none;">
+      <div class="bot-recommendations-header">
+        <strong>Recommended Properties</strong>
+        <button id="closeRecommendations" class="bot-action-btn">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+      <div id="recommendationsList" class="bot-recommendations-list">
+        <!-- Recommendations will be inserted here -->
+      </div>
+    </div>
+
+    <!-- Bot Input -->
+    <div class="bot-input-container">
+      <div class="bot-quick-suggestions" id="botSuggestions">
+        <!-- Quick suggestions will appear here -->
+      </div>
+      <form id="botForm" class="bot-input">
+        <input
+          type="text"
+          id="botInput"
+          placeholder="Type your message..."
+          autocomplete="off"
+          required
+        />
+        <button type="submit" id="botSend" class="bot-send-btn">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="/css/bot.css">
+<script src="/js/bot.js"></script>

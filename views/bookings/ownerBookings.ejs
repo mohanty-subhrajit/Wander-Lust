@@ -3,12 +3,68 @@
 <div class="container mt-4">
   <h2>Manage Bookings for My Listings</h2>
   <p class="text-muted">Review and manage booking requests for your properties</p>
+  
+  <!-- Filter Tabs -->
+  <ul class="nav nav-tabs mb-3" id="bookingTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">
+        All Bookings
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+        Pending
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="confirmed-tab" data-bs-toggle="tab" data-bs-target="#confirmed" type="button" role="tab">
+        Confirmed
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="rejected-tab" data-bs-toggle="tab" data-bs-target="#rejected" type="button" role="tab">
+        Rejected
+      </button>
+    </li>
+  </ul>
   <br>
 
   <% if(bookings.length === 0) { %>
     <div class="alert alert-info">
       <p>No bookings for your listings yet.</p>
       <a href="/listings" class="btn btn-primary">View Your Listings</a>
+    </div>
+  <% } else { %>
+    <div class="tab-content" id="bookingTabContent">
+      <!-- All Bookings Tab -->
+      <div class="tab-pane fade show active" id="all" role="tabpanel">
+        <%- include('partials/bookingTable', { bookings: bookings, filter: 'all' }) %>
+      </div>
+      <!-- Pending Bookings Tab -->
+      <div class="tab-pane fade" id="pending" role="tabpanel">
+        <% const pendingBookings = bookings.filter(b => b.status === 'pending'); %>
+        <%- include('partials/bookingTable', { bookings: pendingBookings, filter: 'pending' }) %>
+      </div>
+      <!-- Confirmed Bookings Tab -->
+      <div class="tab-pane fade" id="confirmed" role="tabpanel">
+        <% const confirmedBookings = bookings.filter(b => b.status === 'confirmed'); %>
+        <%- include('partials/bookingTable', { bookings: confirmedBookings, filter: 'confirmed' }) %>
+      </div>
+      <!-- Rejected Bookings Tab -->
+      <div class="tab-pane fade" id="rejected" role="tabpanel">
+        <% const rejectedBookings = bookings.filter(b => b.status === 'rejected'); %>
+        <%- include('partials/bookingTable', { bookings: rejectedBookings, filter: 'rejected' }) %>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<!-- Booking Table Partial -->
+<% function include(partialPath, data) { %>
+  <% const { bookings: filteredBookings, filter } = data; %>
+  <% if(filteredBookings.length === 0) { %>
+    <div class="alert alert-info">
+      No <%= filter === 'all' ? '' : filter %> bookings found.
     </div>
   <% } else { %>
     <!-- Desktop Table View -->
@@ -28,7 +84,7 @@
             </tr>
           </thead>
           <tbody>
-            <% for(let booking of bookings) { %>
+            <% for(let booking of filteredBookings) { %>
               <% if(booking.listing && booking.customer) { %>
               <tr>
                 <td>
@@ -66,6 +122,10 @@
                         <i class="fa-solid fa-times"></i> Reject
                       </button>
                     </form>
+                  <% } else if(booking.status === 'confirmed') { %>
+                    <a href="/chat/booking/<%= booking._id %>" class="btn btn-sm btn-primary" title="Chat with Customer">
+                      <i class="fa-solid fa-comments"></i> Chat
+                    </a>
                   <% } else { %>
                     <span class="text-muted">No action needed</span>
                   <% } %>
@@ -80,7 +140,7 @@
     
     <!-- Mobile Card View -->
     <div class="d-lg-none">
-      <% for(let booking of bookings) { %>
+      <% for(let booking of filteredBookings) { %>
         <% if(booking.listing && booking.customer) { %>
         <div class="card mb-3">
           <div class="card-body">
@@ -118,6 +178,10 @@
                   </button>
                 </form>
               </div>
+            <% } else if(booking.status === 'confirmed') { %>
+              <a href="/chat/booking/<%= booking._id %>" class="btn btn-primary w-100">
+                <i class="fa-solid fa-comments"></i> Chat with Customer
+              </a>
             <% } else { %>
               <p class="text-muted mb-0">No action needed</p>
             <% } %>
@@ -127,4 +191,5 @@
       <% } %>
     </div>
   <% } %>
+<% } %>
 </div>

@@ -18,13 +18,13 @@
       <div class="mb-3">
         <label for="checkIn" class="form-label">Check-in Date</label>
         <input type="date" name="booking[checkIn]" class="form-control" id="checkIn" required>
-        <div class="invalid-feedback">Please select a check-in date</div>
+        <div class="invalid-feedback">Please select a valid check-in date (today or later)</div>
       </div>
 
       <div class="mb-3">
         <label for="checkOut" class="form-label">Check-out Date</label>
         <input type="date" name="booking[checkOut]" class="form-control" id="checkOut" required>
-        <div class="invalid-feedback">Please select a check-out date</div>
+        <div class="invalid-feedback">Check-out date must be after check-in date</div>
       </div>
 
       <div class="mb-3">
@@ -38,3 +38,46 @@
     </form>
   </div>
 </div>
+
+<script>
+  // Set minimum date to today for check-in
+  const today = new Date().toISOString().split('T')[0];
+  const checkInInput = document.getElementById('checkIn');
+  const checkOutInput = document.getElementById('checkOut');
+  
+  checkInInput.setAttribute('min', today);
+  checkOutInput.setAttribute('min', today);
+  
+  // Update check-out minimum date when check-in changes
+  checkInInput.addEventListener('change', function() {
+    const checkInDate = new Date(this.value);
+    const nextDay = new Date(checkInDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    const minCheckOut = nextDay.toISOString().split('T')[0];
+    checkOutInput.setAttribute('min', minCheckOut);
+    
+    // If check-out is before new minimum, clear it
+    if (checkOutInput.value && checkOutInput.value <= this.value) {
+      checkOutInput.value = '';
+    }
+  });
+  
+  // Validate form before submission
+  document.querySelector('form').addEventListener('submit', function(e) {
+    const checkIn = new Date(checkInInput.value);
+    const checkOut = new Date(checkOutInput.value);
+    const todayDate = new Date(today);
+    
+    if (checkIn < todayDate) {
+      e.preventDefault();
+      alert('Check-in date cannot be in the past!');
+      return false;
+    }
+    
+    if (checkOut <= checkIn) {
+      e.preventDefault();
+      alert('Check-out date must be after check-in date!');
+      return false;
+    }
+  });
+</script>
