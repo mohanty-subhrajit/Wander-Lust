@@ -145,8 +145,8 @@ module.exports.ownerConfirmBooking = async (req, res) => {
   }
   
   await Booking.findByIdAndUpdate(id, { status: "confirmed" });
-  req.flash("success", "Booking confirmed!");
-  res.redirect("/bookings/manage");
+  req.flash("success", "Booking confirmed successfully! View it in the 'Confirmed' tab or start chatting with your guest.");
+  res.redirect("/bookings/manage#confirmed");
 };
 
 // Owner: Reject booking for their listing
@@ -161,6 +161,6 @@ module.exports.ownerRejectBooking = async (req, res) => {
   }
   
   await Booking.findByIdAndUpdate(id, { status: "rejected" });
-  req.flash("success", "Booking rejected!");
-  res.redirect("/bookings/manage");
+  req.flash("success", "Booking rejected. View it in the 'Rejected' tab.");
+  res.redirect("/bookings/manage#rejected");
 };

@@ -53,11 +53,13 @@
                   <div class="message-header">
                     <strong><%= message.sender.username %></strong>
                     <small class="text-muted ms-2">
-                      <%= new Date(message.timestamp).toLocaleString('en-US', { 
+                      <%= new Date(message.timestamp).toLocaleString('en-IN', { 
+                        timeZone: 'Asia/Kolkata',
                         month: 'short', 
                         day: 'numeric', 
                         hour: '2-digit', 
-                        minute: '2-digit' 
+                        minute: '2-digit',
+                        hour12: true
                       }) %>
                     </small>
                   </div>
