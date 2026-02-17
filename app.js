@@ -56,6 +56,7 @@ store.on("error", function (e) {
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
+app.use(express.json()); // Parse JSON bodies (for bot API)
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.engine('ejs', ejsMate);
