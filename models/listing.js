@@ -54,6 +54,12 @@ const listingSchema = new Schema({
   category: {
     type: String,
     enum: ["Trending", "Rooms", "Iconic cities", "mountains", "castles", "Amazing Pools", "camping", "farms", "Arctic", "Boats House"]
+  },
+  availableSlots: {
+    type: Number,
+    required: true,
+    min: [0, 'Available slots cannot be negative'],
+    default: 1
   }
 });
 

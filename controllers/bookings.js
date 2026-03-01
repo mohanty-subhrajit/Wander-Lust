@@ -9,6 +9,11 @@ module.exports.renderBookingForm = async (req, res) => {
     req.flash("error", "Listing not found!");
     return res.redirect("/listings");
   }
+  // Check if listing has available slots
+  if (listing.availableSlots != null && listing.availableSlots <= 0) {
+    req.flash("error", "Sorry, this property is fully booked! No rooms available.");
+    return res.redirect(`/listings/${id}`);
+  }
   res.render("bookings/new.ejs", { listing });
 };
 
@@ -25,6 +30,12 @@ module.exports.createBooking = async (req, res) => {
   // Prevent owner from booking their own listing
   if (listing.owner._id.equals(req.user._id)) {
     req.flash("error", "You cannot book your own listing!");
+    return res.redirect(`/listings/${id}`);
+  }
+
+  // Check if listing has available slots
+  if (listing.availableSlots != null && listing.availableSlots <= 0) {
+    req.flash("error", "Sorry, this property is fully booked! No rooms available.");
     return res.redirect(`/listings/${id}`);
   }
 
@@ -89,7 +100,28 @@ module.exports.allBookings = async (req, res) => {
 // Admin: Confirm booking
 module.exports.confirmBooking = async (req, res) => {
   let { id } = req.params;
+  const booking = await Booking.findById(id).populate("listing");
+
+  if (!booking) {
+    req.flash("error", "Booking not found!");
+    return res.redirect("/bookings/admin/bookings");
+  }
+
+  // Check if slots are available before confirming
+  const listing = await Listing.findById(booking.listing._id);
+  if (listing.availableSlots != null && listing.availableSlots <= 0) {
+    req.flash("error", "Cannot confirm: No rooms available for this listing!");
+    return res.redirect("/bookings/admin/bookings");
+  }
+
   await Booking.findByIdAndUpdate(id, { status: "confirmed" });
+
+  // Decrement available slots
+  if (listing.availableSlots != null) {
+    listing.availableSlots = Math.max(0, listing.availableSlots - 1);
+    await listing.save();
+  }
+
   req.flash("success", "Booking confirmed!");
   res.redirect("/bookings/admin/bookings");
 };
@@ -105,6 +137,17 @@ module.exports.rejectBooking = async (req, res) => {
 // Admin: Delete booking
 module.exports.deleteBooking = async (req, res) => {
   let { id } = req.params;
+  const booking = await Booking.findById(id);
+
+  // If the booking was confirmed, restore the slot
+  if (booking && booking.status === "confirmed") {
+    const listing = await Listing.findById(booking.listing);
+    if (listing && listing.availableSlots != null) {
+      listing.availableSlots += 1;
+      await listing.save();
+    }
+  }
+
   await Booking.findByIdAndDelete(id);
   req.flash("success", "Booking deleted permanently!");
   res.redirect("/bookings/admin/bookings");
@@ -113,6 +156,17 @@ module.exports.deleteBooking = async (req, res) => {
 // Cancel booking
 module.exports.cancelBooking = async (req, res) => {
   let { id } = req.params;
+  const booking = await Booking.findById(id);
+
+  // If the booking was confirmed, restore the slot
+  if (booking && booking.status === "confirmed") {
+    const listing = await Listing.findById(booking.listing);
+    if (listing && listing.availableSlots != null) {
+      listing.availableSlots += 1;
+      await listing.save();
+    }
+  }
+
   await Booking.findByIdAndDelete(id);
   req.flash("success", "Booking cancelled!");
   res.redirect("/bookings/my-bookings");
@@ -143,10 +197,25 @@ module.exports.ownerConfirmBooking = async (req, res) => {
     req.flash("error", "You don't have permission to manage this booking");
     return res.redirect("/bookings/manage");
   }
+
+  // Check if slots are available before confirming
+  const listing = await Listing.findById(booking.listing._id);
+  if (listing.availableSlots != null && listing.availableSlots <= 0) {
+    req.flash("error", "Cannot confirm: No rooms available! Update available slots from the Edit Listing page first.");
+    return res.redirect("/bookings/manage");
+  }
   
   await Booking.findByIdAndUpdate(id, { status: "confirmed" });
+
+  // Decrement available slots
+  if (listing.availableSlots != null) {
+    listing.availableSlots = Math.max(0, listing.availableSlots - 1);
+    await listing.save();
+  }
+
   req.flash("success", "Booking confirmed successfully! View it in the 'Confirmed' tab or start chatting with your guest.");
   res.redirect("/bookings/manage#confirmed");
+};
 };
 
 // Owner: Reject booking for their listing

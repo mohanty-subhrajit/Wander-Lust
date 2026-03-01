@@ -102,6 +102,20 @@
         <div class="invalid-feedback">Please select a category</div>
       </div>
 
+      <div class="mb-3">
+        <label for="availableSlots" class="form-label">Available Rooms / Slots</label>
+        <input
+          name="listing[availableSlots]"
+          value="<%= listing.availableSlots != null ? listing.availableSlots : 1 %>"
+          type="number"
+          class="form-control"
+          min="0"
+          required
+        />
+        <div class="invalid-feedback">Please enter the number of available rooms</div>
+        <small class="form-text text-muted">Update the number of rooms/slots available for booking (set 0 to stop new bookings)</small>
+      </div>
+
       <button class="btn btn-dark edit-btn">Edit</button>
       <br><br><br>
     </form>

@@ -11,6 +11,13 @@
         <h5 class="card-title"><%= listing.title %></h5>
         <p class="card-text"><%= listing.location %>, <%= listing.country %></p>
         <p class="card-text"><strong>₹<%= listing.price.toLocaleString("en-IN") %></strong> / night</p>
+        <% if(listing.availableSlots != null) { %>
+          <p class="card-text">
+            <span class="badge bg-<%= listing.availableSlots > 0 ? 'success' : 'danger' %>">
+              <i class="fa-solid fa-door-open"></i> <%= listing.availableSlots %> room<%= listing.availableSlots !== 1 ? 's' : '' %> available
+            </span>
+          </p>
+        <% } %>
       </div>
     </div>
 
