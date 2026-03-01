@@ -216,7 +216,6 @@ module.exports.ownerConfirmBooking = async (req, res) => {
   req.flash("success", "Booking confirmed successfully! View it in the 'Confirmed' tab or start chatting with your guest.");
   res.redirect("/bookings/manage#confirmed");
 };
-};
 
 // Owner: Reject booking for their listing
 module.exports.ownerRejectBooking = async (req, res) => {
