@@ -9,7 +9,7 @@ module.exports.listingSchema = joi.object({
         price: joi.number().required().min(300),
         image: joi.string().allow("", null),
         category: joi.string().allow("", null),
-        availableSlots: joi.number().integer().min(0).default(1)
+        maxGuests: joi.number().integer().min(1).default(1)
     }).required()
 });
 

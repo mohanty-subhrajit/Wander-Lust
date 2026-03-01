@@ -23,10 +23,10 @@
             <p class="card-text"> &#8377; <%= listing.price.toLocaleString("en-IN") %> </p>
             <p class="card-text"><%= listing.location %> </p>
              <p class="card-text"><%= listing.country %></p>
-            <% if(listing.availableSlots != null && listing.availableSlots > 0) { %>
-              <p class="card-text"><span class="badge bg-success"><i class="fa-solid fa-door-open"></i> <%= listing.availableSlots %> room<%= listing.availableSlots > 1 ? 's' : '' %> available</span></p>
+            <% if(listing.availableGuests > 0) { %>
+              <p class="card-text"><span class="badge bg-success"><i class="fa-solid fa-users"></i> <%= listing.availableGuests %> of <%= listing.maxGuests %> guest spot<%= listing.availableGuests > 1 ? 's' : '' %> available</span></p>
             <% } else { %>
-              <p class="card-text"><span class="badge bg-danger"><i class="fa-solid fa-door-closed"></i> No rooms available &mdash; Fully Booked</span></p>
+              <p class="card-text"><span class="badge bg-danger"><i class="fa-solid fa-user-xmark"></i> No guest spots available &mdash; Fully Booked</span></p>
             <% } %>
         </div>
       </div>
@@ -43,7 +43,7 @@
           </div>
         <% } else { %>
           <div class="text-center mb-3">
-            <% if(listing.availableSlots != null && listing.availableSlots > 0) { %>
+            <% if(listing.availableGuests > 0) { %>
               <a href="/bookings/listings/<%= listing._id %>/book" class="btn btn-success btn-lg">
                 <i class="fa-solid fa-calendar-check"></i> Book Now
               </a>
@@ -51,7 +51,7 @@
               <button class="btn btn-secondary btn-lg" disabled>
                 <i class="fa-solid fa-ban"></i> Fully Booked
               </button>
-              <p class="text-danger mt-2"><small>This property is currently fully booked. Please check back later.</small></p>
+              <p class="text-danger mt-2"><small>All guest spots are currently reserved. Please check back later.</small></p>
             <% } %>
           </div>
         <% } %>

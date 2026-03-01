@@ -69,6 +69,9 @@ module.exports.createListing = async (req, res, next) => {
   newListing.image = { url, filename };
   newListing.geometry = response.body.features[0].geometry;
 
+  // Set available guests equal to max guests on creation
+  newListing.availableGuests = newListing.maxGuests;
+
   let savedListing =await newListing.save();
   console.log(savedListing);
   req.flash("success", "New listing created!");
@@ -102,6 +105,15 @@ module.exports.updateListing = async (req, res) => {
   
   let listing = await Listing.findByIdAndUpdate(id, { ...req.body.listing });
   
+  // If maxGuests was changed, adjust availableGuests proportionally
+  if (req.body.listing.maxGuests) {
+    const newMax = parseInt(req.body.listing.maxGuests);
+    const oldMax = listing.maxGuests;
+    const bookedGuests = oldMax - listing.availableGuests;
+    listing.maxGuests = newMax;
+    listing.availableGuests = Math.max(0, newMax - bookedGuests);
+  }
+
   // Update geometry with new coordinates
   if (response.body.features.length > 0) {
     listing.geometry = response.body.features[0].geometry;

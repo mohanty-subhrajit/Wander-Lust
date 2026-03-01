@@ -55,10 +55,16 @@ const listingSchema = new Schema({
     type: String,
     enum: ["Trending", "Rooms", "Iconic cities", "mountains", "castles", "Amazing Pools", "camping", "farms", "Arctic", "Boats House"]
   },
-  availableSlots: {
+  maxGuests: {
     type: Number,
     required: true,
-    min: [0, 'Available slots cannot be negative'],
+    min: [1, 'Must accommodate at least 1 guest'],
+    default: 1
+  },
+  availableGuests: {
+    type: Number,
+    required: true,
+    min: [0, 'Available guests cannot be negative'],
     default: 1
   }
 });

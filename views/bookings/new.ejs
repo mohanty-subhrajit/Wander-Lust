@@ -11,10 +11,16 @@
         <h5 class="card-title"><%= listing.title %></h5>
         <p class="card-text"><%= listing.location %>, <%= listing.country %></p>
         <p class="card-text"><strong>₹<%= listing.price.toLocaleString("en-IN") %></strong> / night</p>
-        <% if(listing.availableSlots != null) { %>
+        <% if(listing.availableGuests > 0) { %>
           <p class="card-text">
-            <span class="badge bg-<%= listing.availableSlots > 0 ? 'success' : 'danger' %>">
-              <i class="fa-solid fa-door-open"></i> <%= listing.availableSlots %> room<%= listing.availableSlots !== 1 ? 's' : '' %> available
+            <span class="badge bg-success">
+              <i class="fa-solid fa-users"></i> <%= listing.availableGuests %> of <%= listing.maxGuests %> guest spot<%= listing.availableGuests !== 1 ? 's' : '' %> available
+            </span>
+          </p>
+        <% } else { %>
+          <p class="card-text">
+            <span class="badge bg-danger">
+              <i class="fa-solid fa-user-xmark"></i> No guest spots available
             </span>
           </p>
         <% } %>
@@ -36,8 +42,9 @@
 
       <div class="mb-3">
         <label for="guests" class="form-label">Number of Guests</label>
-        <input type="number" name="booking[guests]" class="form-control" id="guests" min="1" max="20" required>
-        <div class="invalid-feedback">Please enter number of guests (1-20)</div>
+        <input type="number" name="booking[guests]" class="form-control" id="guests" min="1" max="<%= listing.availableGuests %>" required>
+        <div class="invalid-feedback">Please enter number of guests (1 to <%= listing.availableGuests %>)</div>
+        <small class="form-text text-muted">Maximum <%= listing.availableGuests %> guest<%= listing.availableGuests !== 1 ? 's' : '' %> allowed</small>
       </div>
 
       <button type="submit" class="btn btn-success w-100">Submit Booking Request</button>
@@ -74,6 +81,8 @@
     const checkIn = new Date(checkInInput.value);
     const checkOut = new Date(checkOutInput.value);
     const todayDate = new Date(today);
+    const guestsInput = document.getElementById('guests');
+    const maxGuests = <%= listing.availableGuests %>;
     
     if (checkIn < todayDate) {
       e.preventDefault();
@@ -84,6 +93,18 @@
     if (checkOut <= checkIn) {
       e.preventDefault();
       alert('Check-out date must be after check-in date!');
+      return false;
+    }
+
+    if (parseInt(guestsInput.value) > maxGuests) {
+      e.preventDefault();
+      alert('Only ' + maxGuests + ' guest spot(s) available! Please reduce the number of guests.');
+      return false;
+    }
+
+    if (parseInt(guestsInput.value) < 1) {
+      e.preventDefault();
+      alert('At least 1 guest is required!');
       return false;
     }
   });

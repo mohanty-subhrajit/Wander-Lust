@@ -9,9 +9,9 @@ module.exports.renderBookingForm = async (req, res) => {
     req.flash("error", "Listing not found!");
     return res.redirect("/listings");
   }
-  // Check if listing has available slots
-  if (listing.availableSlots != null && listing.availableSlots <= 0) {
-    req.flash("error", "Sorry, this property is fully booked! No rooms available.");
+  // Check if listing has available guest capacity
+  if (listing.availableGuests <= 0) {
+    req.flash("error", "Sorry, this property is fully booked! No guest spots available.");
     return res.redirect(`/listings/${id}`);
   }
   res.render("bookings/new.ejs", { listing });
@@ -33,13 +33,19 @@ module.exports.createBooking = async (req, res) => {
     return res.redirect(`/listings/${id}`);
   }
 
-  // Check if listing has available slots
-  if (listing.availableSlots != null && listing.availableSlots <= 0) {
-    req.flash("error", "Sorry, this property is fully booked! No rooms available.");
-    return res.redirect(`/listings/${id}`);
+  const { checkIn, checkOut, guests } = req.body.booking;
+  const guestCount = parseInt(guests);
+
+  // Validate guest count against available capacity
+  if (guestCount > listing.availableGuests) {
+    req.flash("error", `Only ${listing.availableGuests} guest spot(s) available! You requested ${guestCount}.`);
+    return res.redirect(`/bookings/listings/${id}/book`);
   }
 
-  const { checkIn, checkOut, guests } = req.body.booking;
+  if (listing.availableGuests <= 0) {
+    req.flash("error", "Sorry, this property is fully booked! No guest spots available.");
+    return res.redirect(`/listings/${id}`);
+  }
   
   // Validate dates
   const checkInDate = new Date(checkIn);
@@ -70,13 +76,18 @@ module.exports.createBooking = async (req, res) => {
     customer: req.user._id,
     checkIn,
     checkOut,
-    guests,
+    guests: guestCount,
     totalPrice,
     status: "pending"
   });
 
   await newBooking.save();
-  req.flash("success", "Booking request submitted! Waiting for confirmation.");
+
+  // Reserve guest spots immediately on booking creation
+  listing.availableGuests = Math.max(0, listing.availableGuests - guestCount);
+  await listing.save();
+
+  req.flash("success", "Booking request submitted! Your guest spots have been reserved.");
   res.redirect("/bookings/my-bookings");
 };
 
@@ -100,37 +111,35 @@ module.exports.allBookings = async (req, res) => {
 // Admin: Confirm booking
 module.exports.confirmBooking = async (req, res) => {
   let { id } = req.params;
-  const booking = await Booking.findById(id).populate("listing");
+  const booking = await Booking.findById(id);
 
   if (!booking) {
     req.flash("error", "Booking not found!");
     return res.redirect("/bookings/admin/bookings");
   }
 
-  // Check if slots are available before confirming
-  const listing = await Listing.findById(booking.listing._id);
-  if (listing.availableSlots != null && listing.availableSlots <= 0) {
-    req.flash("error", "Cannot confirm: No rooms available for this listing!");
-    return res.redirect("/bookings/admin/bookings");
-  }
-
+  // Guests already reserved at booking time, just confirm
   await Booking.findByIdAndUpdate(id, { status: "confirmed" });
-
-  // Decrement available slots
-  if (listing.availableSlots != null) {
-    listing.availableSlots = Math.max(0, listing.availableSlots - 1);
-    await listing.save();
-  }
-
   req.flash("success", "Booking confirmed!");
   res.redirect("/bookings/admin/bookings");
 };
 
-// Admin: Reject booking
+// Admin: Reject booking — restore guest spots
 module.exports.rejectBooking = async (req, res) => {
   let { id } = req.params;
+  const booking = await Booking.findById(id);
+
+  if (booking && booking.status === "pending") {
+    // Restore guest spots since booking was pending (reserved on creation)
+    const listing = await Listing.findById(booking.listing);
+    if (listing) {
+      listing.availableGuests = Math.min(listing.maxGuests, listing.availableGuests + booking.guests);
+      await listing.save();
+    }
+  }
+
   await Booking.findByIdAndUpdate(id, { status: "rejected" });
-  req.flash("success", "Booking rejected!");
+  req.flash("success", "Booking rejected! Guest spots have been restored.");
   res.redirect("/bookings/admin/bookings");
 };
 
@@ -139,36 +148,36 @@ module.exports.deleteBooking = async (req, res) => {
   let { id } = req.params;
   const booking = await Booking.findById(id);
 
-  // If the booking was confirmed, restore the slot
-  if (booking && booking.status === "confirmed") {
+  // Restore guest spots if booking was pending or confirmed
+  if (booking && (booking.status === "pending" || booking.status === "confirmed")) {
     const listing = await Listing.findById(booking.listing);
-    if (listing && listing.availableSlots != null) {
-      listing.availableSlots += 1;
+    if (listing) {
+      listing.availableGuests = Math.min(listing.maxGuests, listing.availableGuests + booking.guests);
       await listing.save();
     }
   }
 
   await Booking.findByIdAndDelete(id);
-  req.flash("success", "Booking deleted permanently!");
+  req.flash("success", "Booking deleted permanently! Guest spots restored.");
   res.redirect("/bookings/admin/bookings");
 };
 
-// Cancel booking
+// Cancel booking — restore guest spots
 module.exports.cancelBooking = async (req, res) => {
   let { id } = req.params;
   const booking = await Booking.findById(id);
 
-  // If the booking was confirmed, restore the slot
-  if (booking && booking.status === "confirmed") {
+  // Restore guest spots if booking was pending or confirmed
+  if (booking && (booking.status === "pending" || booking.status === "confirmed")) {
     const listing = await Listing.findById(booking.listing);
-    if (listing && listing.availableSlots != null) {
-      listing.availableSlots += 1;
+    if (listing) {
+      listing.availableGuests = Math.min(listing.maxGuests, listing.availableGuests + booking.guests);
       await listing.save();
     }
   }
 
   await Booking.findByIdAndDelete(id);
-  req.flash("success", "Booking cancelled!");
+  req.flash("success", "Booking cancelled! Guest spots restored.");
   res.redirect("/bookings/my-bookings");
 };
 
@@ -198,26 +207,13 @@ module.exports.ownerConfirmBooking = async (req, res) => {
     return res.redirect("/bookings/manage");
   }
 
-  // Check if slots are available before confirming
-  const listing = await Listing.findById(booking.listing._id);
-  if (listing.availableSlots != null && listing.availableSlots <= 0) {
-    req.flash("error", "Cannot confirm: No rooms available! Update available slots from the Edit Listing page first.");
-    return res.redirect("/bookings/manage");
-  }
-  
+  // Guests already reserved at booking time, just confirm
   await Booking.findByIdAndUpdate(id, { status: "confirmed" });
-
-  // Decrement available slots
-  if (listing.availableSlots != null) {
-    listing.availableSlots = Math.max(0, listing.availableSlots - 1);
-    await listing.save();
-  }
-
   req.flash("success", "Booking confirmed successfully! View it in the 'Confirmed' tab or start chatting with your guest.");
   res.redirect("/bookings/manage#confirmed");
 };
 
-// Owner: Reject booking for their listing
+// Owner: Reject booking for their listing — restore guest spots
 module.exports.ownerRejectBooking = async (req, res) => {
   let { id } = req.params;
   const booking = await Booking.findById(id).populate("listing");
@@ -227,8 +223,17 @@ module.exports.ownerRejectBooking = async (req, res) => {
     req.flash("error", "You don't have permission to manage this booking");
     return res.redirect("/bookings/manage");
   }
+
+  // Restore guest spots since booking is being rejected
+  if (booking.status === "pending") {
+    const listing = await Listing.findById(booking.listing._id);
+    if (listing) {
+      listing.availableGuests = Math.min(listing.maxGuests, listing.availableGuests + booking.guests);
+      await listing.save();
+    }
+  }
   
   await Booking.findByIdAndUpdate(id, { status: "rejected" });
-  req.flash("success", "Booking rejected. View it in the 'Rejected' tab.");
+  req.flash("success", "Booking rejected. Guest spots have been restored.");
   res.redirect("/bookings/manage#rejected");
 };

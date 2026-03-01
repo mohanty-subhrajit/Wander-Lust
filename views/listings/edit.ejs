@@ -103,17 +103,17 @@
       </div>
 
       <div class="mb-3">
-        <label for="availableSlots" class="form-label">Available Rooms / Slots</label>
+        <label for="maxGuests" class="form-label">Maximum Guest Capacity</label>
         <input
-          name="listing[availableSlots]"
-          value="<%= listing.availableSlots != null ? listing.availableSlots : 1 %>"
+          name="listing[maxGuests]"
+          value="<%= listing.maxGuests || 1 %>"
           type="number"
           class="form-control"
-          min="0"
+          min="1"
           required
         />
-        <div class="invalid-feedback">Please enter the number of available rooms</div>
-        <small class="form-text text-muted">Update the number of rooms/slots available for booking (set 0 to stop new bookings)</small>
+        <div class="invalid-feedback">Please enter the maximum guest capacity (minimum 1)</div>
+        <small class="form-text text-muted">Update the maximum number of guests your property can accommodate. Currently <strong><%= listing.availableGuests %></strong> of <strong><%= listing.maxGuests %></strong> guest spots available.</small>
       </div>
 
       <button class="btn btn-dark edit-btn">Edit</button>
