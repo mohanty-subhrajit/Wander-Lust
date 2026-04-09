@@ -72,7 +72,6 @@
         <label for="category" class="form-label">Category</label>
         <select name="listing[category]" class="form-select" required>
           <option value="" selected disabled>Select a category</option>
-          <option value="Trending">Trending</option>
           <option value="Rooms">Rooms</option>
           <option value="Iconic cities">Iconic Cities</option>
           <option value="mountains">Mountains</option>
@@ -85,6 +84,7 @@
         </select>
         <div class="valid-feedback">Category looks good</div>
         <div class="invalid-feedback">Please select a category</div>
+        <small class="form-text text-muted">Note: Your listing will automatically become "Trending" after receiving 2 or more bookings!</small>
      </div>
 
      <div class="mb-3">
@@ -93,6 +93,20 @@
         <div class="valid-feedback">Looks good</div>
         <div class="invalid-feedback">Please enter the maximum number of guests (minimum 1)</div>
         <small class="form-text text-muted">Enter the total number of guests your property can accommodate at once</small>
+     </div>
+
+     <div class="mb-3">
+        <label for="ownerUpiId" class="form-label">Your UPI ID (for payment collection)</label>
+        <input 
+          name="listing[ownerUpiId]" 
+          placeholder="e.g., yourname@bankname" 
+          type="text" 
+          class="form-control required"
+          pattern="[a-zA-Z0-9._-]+@[a-zA-Z0-9]+"
+        />
+        <div class="valid-feedback">UPI ID looks good</div>
+        <div class="invalid-feedback">Please enter a valid UPI ID (e.g., yourname@okhdfcbank)</div>
+        <small class="form-text text-muted">Your UPI ID will be used for collecting payments from guests. Format: yourname@bankname</small>
      </div>
       
       

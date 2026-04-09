@@ -52,6 +52,16 @@ const bookingSchema = new Schema({
     enum: ["pending", "confirmed", "rejected"],
     default: "pending"
   },
+  paymentStatus: {
+    type: String,
+    enum: ["unpaid", "completed"],
+    default: "unpaid"
+  },
+  paymentMethod: {
+    type: String,
+    enum: ["upi", "cash", "pending"],
+    default: "pending"
+  },
   createdAt: {
     type: Date,
     default: Date.now

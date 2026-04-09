@@ -11,7 +11,12 @@ module.exports.index = async (req, res) => {
   
   // Filter by category
   if (category && category !== 'all') {
-    filter.category = category;
+    if (category === 'Trending') {
+      // Show listings with 2+ bookings as trending
+      filter.bookingCount = { $gte: 2 };
+    } else {
+      filter.category = category;
+    }
   }
   
   // Search by country

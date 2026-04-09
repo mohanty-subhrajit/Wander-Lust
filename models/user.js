@@ -17,6 +17,36 @@ const  userSchema = new Schema({
     isAdmin:{
         type:Boolean,
         default:false
+    },
+    
+    // Profile fields
+    mobileNumber:{
+        type:String,
+        default:null
+    },
+    profilePhoto:{
+        filename:{
+            type:String,
+            default:null
+        },
+        url:{
+            type:String,
+            default:null
+        }
+    },
+    bio:{
+        type:String,
+        default:null
+    },
+    address:{
+        type:String,
+        default:null
+    },
+    
+    // UPI ID for receiving payments
+    upiId:{
+        type:String,
+        default:null
     }
     
 }, { timestamps: true });

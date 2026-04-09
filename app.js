@@ -16,6 +16,7 @@ const dbUrl= process.env.ATLASDB_URL;
 const listingsRouter = require("./routes/listing.js");
 const reviewsRouter = require("./routes/reviews.js");
 const bookingRouter = require("./routes/booking.js");
+const paymentRouter = require("./routes/payment.js");
 const chatRouter = require("./routes/chat.js");
 const botRouter = require("./routes/bot.js");
 const session = require("express-session");
@@ -160,6 +161,7 @@ app.get("/", (req, res) => {
 app.use("/listings",listingsRouter);
 app.use("/listings/:id/reviews",reviewsRouter);
 app.use("/bookings", bookingRouter);
+app.use("/payments", paymentRouter);
 app.use("/chat", chatRouter);
 app.use("/bot", botRouter);
 app.use("/",userRouter);

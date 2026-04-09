@@ -1,6 +1,6 @@
 const Listing = require("./models/listing");
 const Booking = require("./models/booking");
-const { listingSchema, reviewSchema } = require("./schema.js");
+const { listingSchema, reviewSchema, profileSchema } = require("./schema.js");
 const ExpressError = require("./utils/ExpressError.js");
 const  Review = require("./models/review.js");
 
@@ -148,4 +148,15 @@ next();
     }
 
     next();
+  };
+
+  // Validate profile data
+  module.exports.validateProfile = (req, res, next) => {
+    let {error} = profileSchema.validate(req.body);
+    if(error){
+      const msg = error.details.map(detail => detail.message).join(", ");
+      throw new ExpressError(400, msg);
+    } else {
+      next();
+    }
   };

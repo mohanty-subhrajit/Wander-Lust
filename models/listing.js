@@ -66,6 +66,14 @@ const listingSchema = new Schema({
     required: true,
     min: [0, 'Available guests cannot be negative'],
     default: 1
+  },
+  bookingCount: {
+    type: Number,
+    default: 0
+  },
+  ownerUpiId: {
+    type: String,
+    default: null
   }
 });
 

@@ -1,5 +1,6 @@
 const Booking = require("../models/booking");
 const Listing = require("../models/listing");
+const { sendBookingConfirmation } = require("../utils/emailService");
 
 // Show booking form
 module.exports.renderBookingForm = async (req, res) => {
@@ -111,7 +112,7 @@ module.exports.allBookings = async (req, res) => {
 // Admin: Confirm booking
 module.exports.confirmBooking = async (req, res) => {
   let { id } = req.params;
-  const booking = await Booking.findById(id);
+  const booking = await Booking.findById(id).populate("listing").populate("customer");
 
   if (!booking) {
     req.flash("error", "Booking not found!");
@@ -120,6 +121,23 @@ module.exports.confirmBooking = async (req, res) => {
 
   // Guests already reserved at booking time, just confirm
   await Booking.findByIdAndUpdate(id, { status: "confirmed" });
+  
+  // Increment booking count
+  const listing = await Listing.findById(booking.listing._id);
+  if (listing) {
+    listing.bookingCount = (listing.bookingCount || 0) + 1;
+    await listing.save();
+  }
+  
+  // Send booking confirmation email
+  await sendBookingConfirmation({
+    to: booking.customer.email,
+    username: booking.customer.username,
+    listing: booking.listing,
+    booking: booking,
+    paid: booking.paymentStatus === 'completed'
+  });
+  
   req.flash("success", "Booking confirmed!");
   res.redirect("/bookings/admin/bookings");
 };
@@ -199,7 +217,7 @@ module.exports.ownerBookings = async (req, res) => {
 // Owner: Confirm booking for their listing
 module.exports.ownerConfirmBooking = async (req, res) => {
   let { id } = req.params;
-  const booking = await Booking.findById(id).populate("listing");
+  const booking = await Booking.findById(id).populate("listing").populate("customer");
   
   // Check if the current user owns the listing
   if (!booking.listing.owner.equals(req.user._id)) {
@@ -209,6 +227,23 @@ module.exports.ownerConfirmBooking = async (req, res) => {
 
   // Guests already reserved at booking time, just confirm
   await Booking.findByIdAndUpdate(id, { status: "confirmed" });
+  
+  // Increment booking count
+  const listing = await Listing.findById(booking.listing._id);
+  if (listing) {
+    listing.bookingCount = (listing.bookingCount || 0) + 1;
+    await listing.save();
+  }
+  
+  // Send booking confirmation email
+  await sendBookingConfirmation({
+    to: booking.customer.email,
+    username: booking.customer.username,
+    listing: booking.listing,
+    booking: booking,
+    paid: booking.paymentStatus === 'completed'
+  });
+  
   req.flash("success", "Booking confirmed successfully! View it in the 'Confirmed' tab or start chatting with your guest.");
   res.redirect("/bookings/manage#confirmed");
 };

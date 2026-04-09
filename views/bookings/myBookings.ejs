@@ -41,9 +41,26 @@
               <% } else if(booking.status === 'confirmed') { %>
                 <span class="badge bg-success">Confirmed</span>
                 <p class="text-success mt-2"><small><i class="fa-solid fa-check-circle"></i> Your booking is confirmed!</small></p>
-                <a href="/chat/booking/<%= booking._id %>" class="btn btn-primary btn-sm mt-2">
-                  <i class="fa-solid fa-comments"></i> Chat with Owner
-                </a>
+                
+                <!-- Payment Status Section -->
+                <div class="mt-3">
+                  <% if(booking.paymentStatus === 'completed') { %>
+                    <span class="badge bg-info">💳 Payment Done</span>
+                    <p class="text-success mt-2"><small><i class="fa-solid fa-check-circle"></i> Payment completed</small></p>
+                  <% } else { %>
+                    <span class="badge bg-warning text-dark">Payment Pending</span>
+                    <p class="text-warning mt-2"><small>Complete your payment to confirm your stay</small></p>
+                    <a href="/payments/booking/<%= booking._id %>" class="btn btn-success btn-sm mt-2">
+                      <i class="fa-solid fa-credit-card"></i> Make Payment
+                    </a>
+                  <% } %>
+                </div>
+
+                <div class="mt-3">
+                  <a href="/chat/booking/<%= booking._id %>" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-comments"></i> Chat with Owner
+                  </a>
+                </div>
               <% } else if(booking.status === 'rejected') { %>
                 <span class="badge bg-danger">Rejected</span>
                 <p class="text-danger mt-2"><small>Your booking was not approved. Please book another listing.</small></p>

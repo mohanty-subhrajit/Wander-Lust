@@ -1,0 +1,109 @@
+<%-layout("/layouts/boilerplate")%>
+
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <h1 class="mb-4 text-center">Edit Your Profile</h1>
+
+      <form action="/users/profile/edit" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+        <!-- Current Profile Photo -->
+        <div class="mb-4 text-center">
+          <label class="form-label">Current Profile Photo</label>
+          <div>
+            <% if (user.profilePhoto && user.profilePhoto.url) { %>
+              <img src="<%= user.profilePhoto.url %>" alt="Profile Photo" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #007bff;">
+            <% } else { %>
+              <img src="https://via.placeholder.com/150" alt="Profile Photo" class="rounded-circle" style="width: 150px; height: 150px; border: 3px solid #ddd;">
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Profile Photo Upload -->
+        <div class="mb-3">
+          <label for="profilePhoto" class="form-label">Upload New Profile Photo</label>
+          <input type="file" class="form-control" id="profilePhoto" name="profile[profilePhoto]" accept="image/*">
+          <small class="text-muted">JPG, PNG (Max 5MB)</small>
+        </div>
+
+        <!-- Mobile Number -->
+        <div class="mb-3">
+          <label for="mobileNumber" class="form-label">Mobile Number</label>
+          <input 
+            type="tel" 
+            class="form-control" 
+            id="mobileNumber" 
+            name="profile[mobileNumber]" 
+            placeholder="Enter 10-digit mobile number"
+            value="<%= user.mobileNumber || '' %>"
+            pattern="[0-9]{10}"
+          >
+          <small class="text-muted">10-digit mobile number</small>
+        </div>
+
+        <!-- UPI ID -->
+        <div class="mb-3">
+          <label for="upiId" class="form-label">UPI ID</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="upiId" 
+            name="profile[upiId]" 
+            placeholder="e.g., yourname@bankname"
+            value="<%= user.upiId || '' %>"
+          >
+          <small class="text-muted">Format: yourname@bankname (e.g., john@okhdfcbank)</small>
+        </div>
+
+        <!-- Bio -->
+        <div class="mb-3">
+          <label for="bio" class="form-label">Bio</label>
+          <textarea 
+            class="form-control" 
+            id="bio" 
+            name="profile[bio]" 
+            rows="3"
+            placeholder="Tell us something about yourself..."
+            maxlength="500"
+          ><%= user.bio || '' %></textarea>
+          <small class="text-muted">Max 500 characters</small>
+        </div>
+
+        <!-- Address -->
+        <div class="mb-3">
+          <label for="address" class="form-label">Address</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="address" 
+            name="profile[address]" 
+            placeholder="Your residential address"
+            value="<%= user.address || '' %>"
+            maxlength="200"
+          >
+          <small class="text-muted">Max 200 characters</small>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="mb-3">
+          <button type="submit" class="btn btn-primary btn-lg w-100">Save Changes</button>
+        </div>
+
+        <!-- Cancel Button -->
+        <div class="mb-3">
+          <a href="/users/profile" class="btn btn-secondary btn-lg w-100">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+.rounded-circle {
+  border: 3px solid #007bff;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #333;
+}
+</style>

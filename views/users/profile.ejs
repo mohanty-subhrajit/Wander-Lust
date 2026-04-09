@@ -1,0 +1,129 @@
+<%-layout("/layouts/boilerplate")%>
+
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">My Profile</h3>
+        </div>
+
+        <div class="card-body">
+          <!-- Profile Photo Section -->
+          <div class="text-center mb-4">
+            <% if (user.profilePhoto && user.profilePhoto.url) { %>
+              <img src="<%= user.profilePhoto.url %>" alt="Profile Photo" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #007bff;">
+            <% } else { %>
+              <img src="https://via.placeholder.com/150" alt="Profile Photo" class="rounded-circle" style="width: 150px; height: 150px; border: 3px solid #007bff;">
+            <% } %>
+          </div>
+
+          <!-- Profile Information -->
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h5 class="text-muted">Username</h5>
+              <p class="fs-5"><strong><%= user.username %></strong></p>
+            </div>
+            <div class="col-md-6">
+              <h5 class="text-muted">Email</h5>
+              <p class="fs-5"><strong><%= user.email %></strong></p>
+            </div>
+          </div>
+
+          <!-- Additional Information -->
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h5 class="text-muted">Mobile Number</h5>
+              <p class="fs-5">
+                <% if (user.mobileNumber) { %>
+                  <strong><%= user.mobileNumber %></strong>
+                <% } else { %>
+                  <span class="text-secondary">Not provided</span>
+                <% } %>
+              </p>
+            </div>
+            <div class="col-md-6">
+              <h5 class="text-muted">UPI ID</h5>
+              <p class="fs-5">
+                <% if (user.upiId) { %>
+                  <strong><%= user.upiId %></strong>
+                <% } else { %>
+                  <span class="text-secondary">Not provided</span>
+                <% } %>
+              </p>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-12">
+              <h5 class="text-muted">Bio</h5>
+              <p class="fs-5">
+                <% if (user.bio) { %>
+                  <strong><%= user.bio %></strong>
+                <% } else { %>
+                  <span class="text-secondary">No bio added</span>
+                <% } %>
+              </p>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-12">
+              <h5 class="text-muted">Address</h5>
+              <p class="fs-5">
+                <% if (user.address) { %>
+                  <strong><%= user.address %></strong>
+                <% } else { %>
+                  <span class="text-secondary">No address added</span>
+                <% } %>
+              </p>
+            </div>
+          </div>
+
+          <!-- Account Status -->
+          <div class="row mb-4">
+            <div class="col-md-12">
+              <h5 class="text-muted">Account Status</h5>
+              <% if (user.isAdmin) { %>
+                <span class="badge bg-danger fs-6">Admin</span>
+              <% } else { %>
+                <span class="badge bg-success fs-6">User</span>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="row">
+            <div class="col-md-12">
+              <a href="/users/profile/edit" class="btn btn-primary btn-lg w-100 mb-2">
+                <i class="bi bi-pencil"></i> Edit Profile
+              </a>
+              <a href="/listings" class="btn btn-secondary btn-lg w-100">
+                <i class="bi bi-house"></i> Back to Listings
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer text-muted">
+          <small>Member since <%= new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.card {
+  border: none;
+  border-radius: 10px;
+}
+
+.card-header {
+  border-radius: 10px 10px 0 0;
+}
+
+.rounded-circle {
+  border: 3px solid #007bff;
+}
+</style>
