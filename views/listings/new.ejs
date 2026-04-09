@@ -57,15 +57,57 @@
       
      <div class="mb-3">
         <label for="location" class="form-label">Location</label>
-        <input
-        name="listing[location]"
-        placeholder="Bhubaneswar"
-        type="text"
-        class="form-control"
-        required
-      />
-      <div class="valid-feedback">Location looks good</div>
-          <div class="invalid-feedback">Please give a location</div>
+        <div class="input-group mb-2">
+          <input
+            id="location"
+            name="listing[location]"
+            placeholder="Bhubaneswar"
+            type="text"
+            class="form-control"
+            required
+          />
+        </div>
+        <div class="valid-feedback">Location looks good</div>
+        <div class="invalid-feedback">Please give a location</div>
+
+        <!-- Location Options -->
+        <div class="row mt-2">
+          <div class="col-md-6">
+            <button type="button" id="useCurrentLocation" class="btn btn-info btn-sm w-100">
+              <i class="fa-solid fa-location-dot"></i> Use Current Location
+            </button>
+          </div>
+          <div class="col-md-6">
+            <button type="button" class="btn btn-primary btn-sm w-100" data-bs-toggle="collapse" data-bs-target="#googleLocationCollapse">
+              <i class="fa-brands fa-google"></i> Google Maps Location
+            </button>
+          </div>
+        </div>
+
+        <!-- Google Location Input (Hidden by default) -->
+        <div class="collapse mt-2" id="googleLocationCollapse">
+          <div class="card card-body">
+            <label class="form-label">Paste Google Maps URL or Coordinates</label>
+            <div class="input-group mb-2">
+              <input
+                type="text"
+                id="googleLocationInput"
+                class="form-control"
+                placeholder="Example: https://www.google.com/maps/@20.1234,-85.8246 OR 20.1234,-85.8246"
+              />
+              <button type="button" id="useGoogleLocation" class="btn btn-primary">
+                <i class="fa-solid fa-check"></i> Use This
+              </button>
+            </div>
+            <small class="form-text text-muted">
+              <strong>How to use:</strong><br>
+              1. Open Google Maps, find your property<br>
+              2. Copy the URL from address bar<br>
+              3. Paste it in the field above<br>
+              OR paste coordinates in format: 20.1234,-85.8246
+            </small>
+          </div>
+        </div>
      </div>
 
      <div class="mb-3">
@@ -114,7 +156,7 @@
       <br><br><br>
     </form>
 
-    
+    <script src="/js/locationPicker.js"></script>
   </body>
   </div>
 </div>
