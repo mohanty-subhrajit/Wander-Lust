@@ -164,7 +164,7 @@ app.use("/bookings", bookingRouter);
 app.use("/payments", paymentRouter);
 app.use("/chat", chatRouter);
 app.use("/bot", botRouter);
-app.use("/",userRouter);
+app.use("/users",userRouter);
 // app.get("/testListing", async (req, res) => {
 //   let sampleListing = new Listing({
 //     title: "My New Villa",
