@@ -21,6 +21,51 @@ transporter.verify((error, success) => {
 });
 
 /**
+ * Validate email address
+ * @param {String} email - Email to validate
+ * @returns {Object} - { isValid: boolean, message: string }
+ */
+const validateEmail = (email) => {
+  // Basic email regex pattern
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+  if (!email || typeof email !== 'string') {
+    return { isValid: false, message: 'Email is required and must be a string' };
+  }
+  
+  email = email.trim();
+  
+  if (!emailRegex.test(email)) {
+    return { isValid: false, message: 'Invalid email format' };
+  }
+  
+  // Check for dummy email domains
+  const dummyDomains = [
+    'test.com',
+    'example.com',
+    'temp.email',
+    '10minutemail.com',
+    'guerrillamail.com',
+    'mailinator.com',
+    'temp-mail.org',
+    'throwaway.email',
+    'yopmail.com',
+    'fakeinbox.com',
+    'robinhoodie.com',
+    'tempmail.io',
+    'maildrop.cc'
+  ];
+  
+  const domain = email.split('@')[1].toLowerCase();
+  
+  if (dummyDomains.includes(domain)) {
+    return { isValid: false, message: `Dummy email domain detected: ${domain}` };
+  }
+  
+  return { isValid: true, message: 'Email is valid' };
+};
+
+/**
  * Send booking confirmation email
  * @param {Object} options - Email options
  * @param {String} options.to - Recipient email
@@ -31,6 +76,13 @@ transporter.verify((error, success) => {
  */
 const sendBookingConfirmation = async (options) => {
   const { to, username, listing, booking, paid } = options;
+  
+  // Validate email first
+  const emailValidation = validateEmail(to);
+  if (!emailValidation.isValid) {
+    console.log(`⚠️ Email not sent (Invalid email): ${to} - ${emailValidation.message}`);
+    return { success: false, message: emailValidation.message, sent: false };
+  }
   
   const checkInDate = new Date(booking.checkIn).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -125,11 +177,11 @@ const sendBookingConfirmation = async (options) => {
       subject: `Booking Confirmed - ${listing.title}`,
       html: htmlContent
     });
-    console.log('Booking confirmation email sent to:', to);
-    return true;
+    console.log('✓ Booking confirmation email sent to:', to);
+    return { success: true, message: 'Booking confirmation email sent successfully', sent: true };
   } catch (error) {
-    console.error('Error sending email:', error);
-    return false;
+    console.error('✗ Error sending booking confirmation email:', error.message);
+    return { success: false, message: error.message, sent: false };
   }
 };
 
@@ -143,6 +195,13 @@ const sendBookingConfirmation = async (options) => {
  */
 const sendPaymentReceipt = async (options) => {
   const { to, username, booking, listing } = options;
+  
+  // Validate email first
+  const emailValidation = validateEmail(to);
+  if (!emailValidation.isValid) {
+    console.log(`⚠️ Email not sent (Invalid email): ${to} - ${emailValidation.message}`);
+    return { success: false, message: emailValidation.message, sent: false };
+  }
   
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
@@ -194,15 +253,16 @@ const sendPaymentReceipt = async (options) => {
       subject: `Payment Receipt - ${listing.title}`,
       html: htmlContent
     });
-    console.log('Payment receipt email sent to:', to);
-    return true;
+    console.log('✓ Payment receipt email sent to:', to);
+    return { success: true, message: 'Payment receipt email sent successfully', sent: true };
   } catch (error) {
-    console.error('Error sending email:', error);
-    return false;
+    console.error('✗ Error sending payment receipt email:', error.message);
+    return { success: false, message: error.message, sent: false };
   }
 };
 
 module.exports = {
   sendBookingConfirmation,
-  sendPaymentReceipt
+  sendPaymentReceipt,
+  validateEmail
 };
