@@ -32,6 +32,7 @@
         <a class="nav-link" href="/listings">Explore</a>
         <% if(currUser) { %>
           <a class="nav-link" href="/bookings/my-bookings">My Bookings</a>
+          <a class="nav-link" href="/users/profile"><b>My Profile</b></a>
         <% } %>
         <% if(currUser && hasBookingsToManage) { %>
           <a class="nav-link" href="/bookings/manage">
@@ -40,8 +41,7 @@
           </a>
         <% } %>
         <% if(currUser && currUser.isAdmin) { %>
-          <a class="nav-link" href="/bookings/admin/bookings"><b>Admin: All Bookings</b></a>
-          <a class="nav-link" href="/users/admin/users"><b>Admin: All Users</b></a>
+          <a class="nav-link" href="/listings/admin/all-listings"><b>Admin</b></a>
         <% } %>
         
         

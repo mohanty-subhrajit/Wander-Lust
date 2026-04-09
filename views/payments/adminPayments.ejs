@@ -1,0 +1,108 @@
+<%- layout("/layouts/boilerplate") %>
+
+<div class="container-fluid mt-4">
+  <!-- Admin Navigation Tabs -->
+  <div class="mb-4">
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link" href="/listings/admin/all-listings">
+          <i class="fa-solid fa-building"></i> Listings
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/bookings/admin/bookings">
+          <i class="fa-solid fa-calendar-check"></i> Bookings
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link active" href="/payments/admin/payments">
+          <i class="fa-solid fa-credit-card"></i> Payments
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/users/admin/users">
+          <i class="fa-solid fa-users"></i> Users
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <h2><i class="fa-solid fa-credit-card"></i> Payment Monitoring (Admin)</h2>
+  <p class="text-muted">Monitor all payments and track revenue</p>
+  <hr>
+
+  <!-- Stats -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card border-success">
+        <div class="card-body text-center">
+          <h5>Total Revenue</h5>
+          <h3 class="text-success">₹<%= stats.totalAmount.toLocaleString("en-IN") %></h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-primary">
+        <div class="card-body text-center">
+          <h5>Completed</h5>
+          <h3 class="text-primary"><%= stats.completedPayments %></h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-info">
+        <div class="card-body text-center">
+          <h5>UPI</h5>
+          <h3 class="text-info"><%= stats.upiPayments %></h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-warning">
+        <div class="card-body text-center">
+          <h5>Cash</h5>
+          <h3 class="text-warning"><%= stats.cashPayments %></h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% if(payments.length === 0) { %>
+    <div class="alert alert-info">No payments yet</div>
+  <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th>Transaction ID</th>
+            <th>Customer</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for(let payment of payments) { %>
+            <% if(payment.booking && payment.customer) { %>
+            <tr>
+              <td><code><%= payment.transactionId %></code></td>
+              <td><strong><%= payment.customer.username %></strong></td>
+              <td><strong style="color: #ff6b6b;">₹<%= payment.amount.toLocaleString("en-IN") %></strong></td>
+              <td>
+                <% if(payment.paymentMethod === 'upi') { %>
+                  <span class="badge bg-info">UPI</span>
+                <% } else { %>
+                  <span class="badge bg-success">Cash</span>
+                <% } %>
+              </td>
+              <td><span class="badge bg-success">Completed</span></td>
+              <td><small><%= new Date(payment.createdAt).toLocaleDateString() %></small></td>
+            </tr>
+            <% } %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>

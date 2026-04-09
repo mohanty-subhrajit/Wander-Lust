@@ -1,0 +1,95 @@
+<%- layout("/layouts/boilerplate") %>
+
+<div class="container-fluid mt-4">
+  <!-- Admin Navigation Tabs -->
+  <div class="mb-4">
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link active" href="/listings/admin/all-listings">
+          <i class="fa-solid fa-building"></i> Listings
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/bookings/admin/bookings">
+          <i class="fa-solid fa-calendar-check"></i> Bookings
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/payments/admin/payments">
+          <i class="fa-solid fa-credit-card"></i> Payments
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/users/admin/users">
+          <i class="fa-solid fa-users"></i> Users
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <h2><i class="fa-solid fa-building"></i> Manage All Listings (Admin)</h2>
+  <p class="text-muted">View, edit, and delete any listing on the platform</p>
+  <hr>
+
+  <!-- Filter Options -->
+  <div class="mb-3">
+    <div class="btn-group" role="group">
+      <a href="/listings/admin/all-listings" class="btn btn-outline-primary active">
+        <i class="fa-solid fa-list"></i> All Listings
+      </a>
+      <a href="/listings/admin/all-listings?status=trending" class="btn btn-outline-warning">
+        <i class="fa-solid fa-fire"></i> Trending
+      </a>
+      <a href="/listings/admin/all-listings?status=inactive" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-pause"></i> Inactive
+      </a>
+    </div>
+  </div>
+
+  <% if(allListings.length === 0) { %>
+    <div class="alert alert-info">No listings found</div>
+  <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th>Property Name</th>
+            <th>Owner</th>
+            <th>Location</th>
+            <th>Price</th>
+            <th>Bookings</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for(let listing of allListings) { %>
+            <% if(listing.owner) { %>
+            <tr>
+              <td><strong><%= listing.title %></strong></td>
+              <td><small><a href="/users/view/<%= listing.owner._id %>" class="text-decoration-none"><%= listing.owner.username %></a></small></td>
+              <td><small><%= listing.location %></small></td>
+              <td><strong>₹<%= listing.price %></strong></td>
+              <td><span class="badge bg-success"><%= listing.bookingCount || 0 %></span></td>
+              <td>
+                <% if(listing.bookingCount >= 2) { %>
+                  <span class="badge bg-warning text-dark"><i class="fa-solid fa-fire"></i> Trending</span>
+                <% } else { %>
+                  <span class="badge bg-primary">Active</span>
+                <% } %>
+              </td>
+              <td>
+                <a href="/listings/<%= listing._id %>" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-eye"></i></a>
+                <a href="/listings/<%= listing._id %>/edit" class="btn btn-sm btn-outline-warning"><i class="fa-solid fa-edit"></i></a>
+                <form action="/listings/<%= listing._id %>?_method=DELETE" method="POST" style="display: inline;" onsubmit="return confirm('Delete this listing?');">
+                  <button class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+            <% } %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>

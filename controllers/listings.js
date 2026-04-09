@@ -145,3 +145,28 @@ module.exports.deleteListing = async (req, res) => {
   req.flash("success", "Listing Was Deleted successfuly!");
   res.redirect("/listings");
 };
+
+// Admin: View all listings
+module.exports.adminListings = async (req, res) => {
+  try {
+    const { status } = req.query;
+    let filter = {};
+    
+    if (status === 'trending') {
+      filter.bookingCount = { $gte: 2 };
+    } else if (status === 'inactive') {
+      filter.bookingCount = 0;
+    }
+    
+    const allListings = await Listing.find(filter)
+      .populate('owner')
+      .populate('reviews')
+      .sort({ createdAt: -1 });
+    
+    res.render("listings/adminListings.ejs", { allListings });
+  } catch (error) {
+    console.error('Admin listings error:', error);
+    req.flash('error', 'Error loading listings');
+    res.redirect('/listings');
+  }
+};
