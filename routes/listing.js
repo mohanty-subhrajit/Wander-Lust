@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const wrapAsync = require("../utils/wrapAsync.js");
-const { isLoggedIn, isOwner, validateListing } = require("../middleware.js");
+const { isLoggedIn, isOwner, validateListing, isAdmin } = require("../middleware.js");
 const listingController = require("../controllers/listings.js");
 const multer  = require('multer');
 const {storage}=require("../cloudConfig.js");
@@ -14,6 +14,9 @@ router
 
 
 router.get("/new", isLoggedIn, listingController.renderNewForm);
+
+// Admin Routes
+router.get("/admin/all-listings", isLoggedIn, isAdmin, wrapAsync(listingController.adminListings));
 
 router
   .route("/:id")

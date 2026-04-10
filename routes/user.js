@@ -35,7 +35,7 @@ router.post("/profile/edit", isLoggedIn, validateProfile, upload.single("profile
 router.get("/view/:userId", wrapAsync(userProfileController.viewUserProfile));
 
 // Admin routes for user management
-router.get("/users/admin/users", isLoggedIn, isAdmin, wrapAsync(userController.allUsers));
-router.delete("/users/admin/users/:id", isLoggedIn, isAdmin, wrapAsync(userController.deleteUser));
+router.get("/admin/users", isLoggedIn, isAdmin, wrapAsync(userController.allUsers));
+router.delete("/admin/users/:id", isLoggedIn, isAdmin, wrapAsync(userController.deleteUser));
 
 module.exports = router;
