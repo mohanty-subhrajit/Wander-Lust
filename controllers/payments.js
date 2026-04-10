@@ -129,3 +129,27 @@ module.exports.paymentHistory = async (req, res) => {
   
   res.render("payments/paymentHistory.ejs", { payments });
 };
+
+// Admin: View all payments
+module.exports.adminPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find({})
+      .populate("booking")
+      .populate("customer")
+      .sort({ createdAt: -1 });
+    
+    // Calculate statistics
+    const stats = {
+      totalAmount: payments.reduce((sum, p) => sum + p.amount, 0),
+      completedPayments: payments.length,
+      upiPayments: payments.filter(p => p.paymentMethod === 'upi').length,
+      cashPayments: payments.filter(p => p.paymentMethod === 'cash').length
+    };
+    
+    res.render("payments/adminPayments.ejs", { payments, stats });
+  } catch (error) {
+    console.error('Admin payments error:', error);
+    req.flash('error', 'Error loading payments');
+    res.redirect('/listings');
+  }
+};
