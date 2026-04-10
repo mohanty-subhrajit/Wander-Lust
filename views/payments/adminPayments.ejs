@@ -2,207 +2,210 @@
 
 <style>
   .admin-container {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #f5f7fa;
     min-height: 100vh;
     padding: 30px 0;
   }
 
   .nav-tabs {
-    border-bottom: 3px solid white;
-    background: white;
-    border-radius: 15px;
-    padding: 10px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    border-bottom: 2px solid #e5e7eb;
+    background: transparent;
+    border-radius: 0;
+    padding: 0 0 16px 0;
+    margin-bottom: 28px;
   }
 
   .nav-link {
-    color: #667eea !important;
+    color: #718096 !important;
     font-weight: 600;
     border: none !important;
-    border-radius: 10px;
-    transition: all 0.3s ease;
+    border-radius: 0;
+    border-bottom: 3px solid transparent;
+    padding: 12px 20px 12px 0 !important;
+    margin-right: 20px;
+    transition: all 0.2s ease;
+    font-size: 14px;
   }
 
   .nav-link:hover {
-    background: #f0f0f0;
-    color: #764ba2 !important;
+    color: #1a202c !important;
+    border-bottom-color: #cbd5e0;
   }
 
   .nav-link.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    color: white !important;
+    color: #0c63e4 !important;
+    border-bottom-color: #0c63e4 !important;
   }
 
-  .stat-card {
-    border: none;
-    border-radius: 15px;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  .page-header {
+    background: white;
+    padding: 28px;
+    border-radius: 12px;
+    margin-bottom: 28px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
-  .stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-  }
-
-  .stat-card.revenue {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-  }
-
-  .stat-card.completed {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
-  }
-
-  .stat-card.upi {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    color: white;
-  }
-
-  .stat-card.cash {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    color: white;
-  }
-
-  .stat-card .card-body {
-    padding: 30px;
-    text-align: center;
-  }
-
-  .stat-card h5 {
-    font-size: 14px;
+  .page-header h1 {
+    font-size: 28px;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-    opacity: 0.9;
+    color: #1a202c;
+    margin: 0 0 8px 0;
   }
 
-  .stat-card h3 {
-    font-size: 32px;
-    font-weight: bold;
+  .page-header p {
+    color: #718096;
+    font-size: 14px;
     margin: 0;
   }
 
+  .stat-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .stat-card:hover {
+    border-color: #cbd5e0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .stat-card h5 {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #718096;
+    margin-bottom: 12px;
+  }
+
+  .stat-card h3 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+    color: #0c63e4;
+  }
+
+  .stat-card.revenue h3 { color: #0c63e4; }
+  .stat-card.completed h3 { color: #059669; }
+  .stat-card.upi h3 { color: #0c63e4; }
+  .stat-card.cash h3 { color: #059669; }
+
   .stat-card i {
-    font-size: 24px;
-    margin-right: 10px;
+    font-size: 20px;
+    margin-right: 8px;
   }
 
   .payment-table {
     background: white;
-    border-radius: 15px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    margin-top: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-top: 28px;
   }
 
   .table {
     margin-bottom: 0;
+    font-size: 14px;
   }
 
   .table thead {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
   }
 
   .table thead th {
-    border: none;
+    color: #4b5563;
     font-weight: 600;
-    padding: 20px;
+    padding: 16px 20px;
+    border: none;
     letter-spacing: 0.5px;
   }
 
   .table tbody tr {
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #e5e7eb;
   }
 
   .table tbody tr:hover {
-    background: #f8f9fa;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    background: #f9fafb;
+  }
+
+  .table tbody tr:last-child {
+    border-bottom: none;
   }
 
   .table tbody td {
-    padding: 18px 20px;
+    padding: 16px 20px;
     vertical-align: middle;
-    border: none;
-    border-bottom: 1px solid #f0f0f0;
+    color: #1a202c;
   }
 
   .transaction-id {
-    background: #f5f5f5;
-    padding: 6px 10px;
+    background: #f3f4f6;
+    padding: 6px 12px;
     border-radius: 6px;
-    font-family: monospace;
+    font-family: 'Monaco', monospace;
     font-size: 12px;
-    color: #667eea;
-    font-weight: 600;
+    color: #0c63e4;
+    font-weight: 500;
   }
 
   .amount {
-    font-size: 16px;
-    font-weight: bold;
-    color: #f5576c;
+    font-size: 15px;
+    font-weight: 600;
+    color: #059669;
   }
 
   .badge {
-    padding: 8px 14px;
-    font-weight: 600;
-    border-radius: 8px;
+    padding: 6px 12px;
+    font-weight: 500;
+    border-radius: 6px;
     font-size: 12px;
   }
 
-  .badge.bg-info {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+  .badge.bg-upi {
+    background: #dbeafe;
+    color: #0c4a6e;
   }
 
-  .badge.bg-success {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
+  .badge.bg-cash {
+    background: #dcfce7;
+    color: #15803d;
   }
 
   .table-responsive {
-    border-radius: 15px;
+    border-radius: 12px;
   }
 
   .empty-state {
     text-align: center;
     padding: 60px 30px;
     background: white;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
   .empty-state i {
     font-size: 48px;
-    color: #ddd;
-    margin-bottom: 20px;
-  }
-
-  .page-title {
-    color: white;
-    font-weight: bold;
-    margin-bottom: 10px;
-    font-size: 28px;
-  }
-
-  .page-subtitle {
-    color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 20px;
+    color: #cbd5e0;
+    margin-bottom: 16px;
   }
 </style>
 
 <div class="admin-container">
-  <div class="container-fluid">
+  <div class="container">
     <!-- Page Header -->
-    <div class="mb-4">
-      <h2 class="page-title"><i class="fas fa-credit-card"></i> Payment Monitoring</h2>
-      <p class="page-subtitle">Monitor all payments and track revenue across your platform</p>
+    <div class="page-header">
+      <h1><i class="fas fa-credit-card"></i> Payments</h1>
+      <p>View and monitor all transaction payments</p>
     </div>
 
     <!-- Admin Navigation Tabs -->
-    <ul class="nav nav-tabs mb-4" role="tablist">
+    <ul class="nav nav-tabs" role="tablist">
       <li class="nav-item">
         <a class="nav-link" href="/listings/admin/all-listings">
           <i class="fa-solid fa-building"></i> Listings
@@ -228,35 +231,27 @@
     <!-- Statistics Cards -->
     <div class="row mb-4">
       <div class="col-md-6 col-lg-3 mb-3">
-        <div class="card stat-card revenue">
-          <div class="card-body">
-            <h5><i class="fas fa-money-bill-wave"></i> Total Revenue</h5>
-            <h3>₹<%= stats.totalAmount.toLocaleString("en-IN") %></h3>
-          </div>
+        <div class="stat-card revenue">
+          <h5>Total Revenue</h5>
+          <h3>₹<%= stats.totalAmount.toLocaleString("en-IN") %></h3>
         </div>
       </div>
       <div class="col-md-6 col-lg-3 mb-3">
-        <div class="card stat-card completed">
-          <div class="card-body">
-            <h5><i class="fas fa-check-circle"></i> Completed</h5>
-            <h3><%= stats.completedPayments %></h3>
-          </div>
+        <div class="stat-card completed">
+          <h5>Completed Payments</h5>
+          <h3><%= stats.completedPayments %></h3>
         </div>
       </div>
       <div class="col-md-6 col-lg-3 mb-3">
-        <div class="card stat-card upi">
-          <div class="card-body">
-            <h5><i class="fas fa-mobile-alt"></i> UPI</h5>
-            <h3><%= stats.upiPayments %></h3>
-          </div>
+        <div class="stat-card upi">
+          <h5>UPI Payments</h5>
+          <h3><%= stats.upiPayments %></h3>
         </div>
       </div>
       <div class="col-md-6 col-lg-3 mb-3">
-        <div class="card stat-card cash">
-          <div class="card-body">
-            <h5><i class="fas fa-coins"></i> Cash</h5>
-            <h3><%= stats.cashPayments %></h3>
-          </div>
+        <div class="stat-card cash">
+          <h5>Cash Payments</h5>
+          <h3><%= stats.cashPayments %></h3>
         </div>
       </div>
     </div>
@@ -266,7 +261,7 @@
       <div class="empty-state">
         <i class="fas fa-inbox"></i>
         <h5>No payments yet</h5>
-        <p class="text-muted">Payments will appear here once bookings are confirmed and paid</p>
+        <p style="color: #718096; margin-bottom: 0;">Payments will appear here once bookings are confirmed and paid</p>
       </div>
     <% } else { %>
       <div class="payment-table">
@@ -274,11 +269,11 @@
           <table class="table">
             <thead>
               <tr>
-                <th><i class="fas fa-hashtag"></i> Transaction ID</th>
-                <th><i class="fas fa-user"></i> Customer</th>
-                <th><i class="fas fa-rupee-sign"></i> Amount</th>
-                <th><i class="fas fa-wallet"></i> Method</th>
-                <th><i class="fas fa-clock"></i> Date</th>
+                <th>Transaction ID</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Date</th>
               </tr>
             </thead>
             <tbody>
@@ -290,12 +285,12 @@
                     <td><span class="amount">₹<%= payment.amount.toLocaleString("en-IN") %></span></td>
                     <td>
                       <% if(payment.paymentMethod === 'upi') { %>
-                        <span class="badge bg-info"><i class="fas fa-mobile-alt"></i> UPI</span>
+                        <span class="badge bg-upi">UPI</span>
                       <% } else { %>
-                        <span class="badge bg-success"><i class="fas fa-coins"></i> Cash</span>
+                        <span class="badge bg-cash">Cash</span>
                       <% } %>
                     </td>
-                    <td><small><%= new Date(payment.createdAt).toLocaleDateString() %></small></td>
+                    <td><small style="color: #718096;"><%= new Date(payment.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) %></small></td>
                   </tr>
                 <% } %>
               <% } %>
