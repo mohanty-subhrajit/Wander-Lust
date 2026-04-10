@@ -1,129 +1,285 @@
 <%-layout("/layouts/boilerplate")%>
 
-<div class="container mt-5">
-  <div class="row">
-    <div class="col-md-8 offset-md-2">
-      <div class="card shadow-lg">
-        <div class="card-header bg-primary text-white">
-          <h3 class="mb-0">My Profile</h3>
-        </div>
+<style>
+  .profile-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 40px 0;
+  }
 
-        <div class="card-body">
-          <!-- Profile Photo Section -->
-          <div class="text-center mb-4">
+  .profile-card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: slideUp 0.5s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .profile-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 40px 30px;
+    text-align: center;
+    color: white;
+  }
+
+  .profile-photo {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border: 5px solid white;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    margin-bottom: 20px;
+  }
+
+  .profile-name {
+    font-size: 28px;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  .profile-status {
+    font-size: 14px;
+    opacity: 0.9;
+    margin: 5px 0 0 0;
+  }
+
+  .profile-body {
+    padding: 40px;
+  }
+
+  .info-section {
+    margin-bottom: 30px;
+  }
+
+  .info-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .info-section h5 {
+    color: #667eea;
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .info-value {
+    background: #f8f9fa;
+    padding: 15px 20px;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+    font-size: 16px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .info-value i {
+    color: #667eea;
+    font-size: 18px;
+  }
+
+  .text-secondary {
+    color: #999;
+    font-style: italic;
+  }
+
+  .badge {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+
+  .button-group {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 30px;
+  }
+
+  @media (min-width: 768px) {
+    .button-group {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .btn-edit {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    font-weight: bold;
+    padding: 12px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+
+  .btn-edit:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    color: white;
+  }
+
+  .btn-back {
+    background: white;
+    border: 2px solid #667eea;
+    color: #667eea;
+    font-weight: bold;
+    padding: 12px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+
+  .btn-back:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-3px);
+  }
+
+  .profile-footer {
+    background: #f8f9fa;
+    padding: 20px;
+    text-align: center;
+    border-top: 1px solid #e0e0e0;
+    color: #666;
+    font-size: 14px;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #667eea, transparent);
+    margin: 30px 0;
+  }
+</style>
+
+<div class="profile-container">
+  <div class="container">
+    <div class="row">
+      <div class="col-12 col-md-8 offset-md-2">
+        <div class="profile-card">
+          <!-- Header Section with Photo -->
+          <div class="profile-header">
             <% if (user.profilePhoto && user.profilePhoto.url) { %>
-              <img src="<%= user.profilePhoto.url %>" alt="Profile Photo" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #007bff;">
+              <img src="<%= user.profilePhoto.url %>" alt="Profile Photo" class="profile-photo rounded-circle">
             <% } else { %>
-              <img src="https://via.placeholder.com/150" alt="Profile Photo" class="rounded-circle" style="width: 150px; height: 150px; border: 3px solid #007bff;">
+              <img src="https://via.placeholder.com/140" alt="Profile Photo" class="profile-photo rounded-circle">
             <% } %>
+            <h2 class="profile-name"><%= user.username %></h2>
+            <p class="profile-status">
+              <% if (user.isAdmin) { %>
+                <span class="badge bg-danger"><i class="fas fa-crown"></i> Admin</span>
+              <% } else { %>
+                <span class="badge bg-success"><i class="fas fa-user"></i> User</span>
+              <% } %>
+            </p>
           </div>
 
-          <!-- Profile Information -->
-          <div class="row mb-4">
-            <div class="col-md-6">
-              <h5 class="text-muted">Username</h5>
-              <p class="fs-5"><strong><%= user.username %></strong></p>
+          <!-- Body Section with Information -->
+          <div class="profile-body">
+            <!-- Contact Information -->
+            <div class="info-section">
+              <h5><i class="fas fa-envelope"></i> Email</h5>
+              <div class="info-value">
+                <i class="fas fa-at"></i>
+                <%= user.email %>
+              </div>
             </div>
-            <div class="col-md-6">
-              <h5 class="text-muted">Email</h5>
-              <p class="fs-5"><strong><%= user.email %></strong></p>
-            </div>
-          </div>
 
-          <!-- Additional Information -->
-          <div class="row mb-4">
-            <div class="col-md-6">
-              <h5 class="text-muted">Mobile Number</h5>
-              <p class="fs-5">
+            <div class="divider"></div>
+
+            <!-- Phone Number -->
+            <div class="info-section">
+              <h5><i class="fas fa-phone"></i> Mobile Number</h5>
+              <div class="info-value">
                 <% if (user.mobileNumber) { %>
+                  <i class="fas fa-mobile-alt"></i>
                   <strong><%= user.mobileNumber %></strong>
                 <% } else { %>
                   <span class="text-secondary">Not provided</span>
                 <% } %>
-              </p>
+              </div>
             </div>
-            <div class="col-md-6">
-              <h5 class="text-muted">UPI ID</h5>
-              <p class="fs-5">
+
+            <!-- UPI ID -->
+            <div class="info-section">
+              <h5><i class="fas fa-wallet"></i> UPI ID</h5>
+              <div class="info-value">
                 <% if (user.upiId) { %>
+                  <i class="fas fa-qrcode"></i>
                   <strong><%= user.upiId %></strong>
                 <% } else { %>
                   <span class="text-secondary">Not provided</span>
                 <% } %>
-              </p>
+              </div>
             </div>
-          </div>
 
-          <div class="row mb-4">
-            <div class="col-md-12">
-              <h5 class="text-muted">Bio</h5>
-              <p class="fs-5">
+            <div class="divider"></div>
+
+            <!-- Bio -->
+            <div class="info-section">
+              <h5><i class="fas fa-pen-fancy"></i> Bio</h5>
+              <div class="info-value">
                 <% if (user.bio) { %>
-                  <strong><%= user.bio %></strong>
+                  <i class="fas fa-comment"></i>
+                  <span><%= user.bio %></span>
                 <% } else { %>
                   <span class="text-secondary">No bio added</span>
                 <% } %>
-              </p>
+              </div>
             </div>
-          </div>
 
-          <div class="row mb-4">
-            <div class="col-md-12">
-              <h5 class="text-muted">Address</h5>
-              <p class="fs-5">
+            <!-- Address -->
+            <div class="info-section">
+              <h5><i class="fas fa-map-pin"></i> Address</h5>
+              <div class="info-value">
                 <% if (user.address) { %>
-                  <strong><%= user.address %></strong>
+                  <i class="fas fa-home"></i>
+                  <span><%= user.address %></span>
                 <% } else { %>
                   <span class="text-secondary">No address added</span>
                 <% } %>
-              </p>
+              </div>
             </div>
-          </div>
 
-          <!-- Account Status -->
-          <div class="row mb-4">
-            <div class="col-md-12">
-              <h5 class="text-muted">Account Status</h5>
-              <% if (user.isAdmin) { %>
-                <span class="badge bg-danger fs-6">Admin</span>
-              <% } else { %>
-                <span class="badge bg-success fs-6">User</span>
-              <% } %>
+            <div class="divider"></div>
+
+            <!-- Account Created Date -->
+            <div class="info-section">
+              <h5><i class="fas fa-calendar-alt"></i> Member Since</h5>
+              <div class="info-value">
+                <i class="fas fa-check-circle"></i>
+                <%= new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+              </div>
             </div>
-          </div>
 
-          <!-- Action Buttons -->
-          <div class="row">
-            <div class="col-md-12">
-              <a href="/users/profile/edit" class="btn btn-primary btn-lg w-100 mb-2">
-                <i class="bi bi-pencil"></i> Edit Profile
+            <!-- Action Buttons -->
+            <div class="button-group">
+              <a href="/users/profile/edit" class="btn btn-edit">
+                <i class="fas fa-pencil-alt"></i> Edit Profile
               </a>
-              <a href="/listings" class="btn btn-secondary btn-lg w-100">
-                <i class="bi bi-house"></i> Back to Listings
+              <a href="/listings" class="btn btn-back">
+                <i class="fas fa-arrow-left"></i> Back to Listings
               </a>
             </div>
           </div>
-        </div>
 
-        <div class="card-footer text-muted">
-          <small>Member since <%= new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></small>
+          <!-- Footer -->
+          <div class="profile-footer">
+            <i class="fas fa-shield-alt"></i> Your profile is secure and private. Only you can view and edit this information.
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
-
-<style>
-.card {
-  border: none;
-  border-radius: 10px;
-}
-
-.card-header {
-  border-radius: 10px 10px 0 0;
-}
-
-.rounded-circle {
-  border: 3px solid #007bff;
-}
-</style>

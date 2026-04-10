@@ -1,9 +1,208 @@
 <%- layout("/layouts/boilerplate") %>
 
-<div class="container-fluid mt-4">
-  <!-- Admin Navigation Tabs -->
-  <div class="mb-4">
-    <ul class="nav nav-tabs" role="tablist">
+<style>
+  .admin-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 30px 0;
+  }
+
+  .nav-tabs {
+    border-bottom: 3px solid white;
+    background: white;
+    border-radius: 15px;
+    padding: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .nav-link {
+    color: #667eea !important;
+    font-weight: 600;
+    border: none !important;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+
+  .nav-link:hover {
+    background: #f0f0f0;
+    color: #764ba2 !important;
+  }
+
+  .nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+  }
+
+  .stat-card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .stat-card.revenue {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .stat-card.completed {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+  }
+
+  .stat-card.upi {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+  }
+
+  .stat-card.cash {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: white;
+  }
+
+  .stat-card .card-body {
+    padding: 30px;
+    text-align: center;
+  }
+
+  .stat-card h5 {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    opacity: 0.9;
+  }
+
+  .stat-card h3 {
+    font-size: 32px;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  .stat-card i {
+    font-size: 24px;
+    margin-right: 10px;
+  }
+
+  .payment-table {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    margin-top: 30px;
+  }
+
+  .table {
+    margin-bottom: 0;
+  }
+
+  .table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .table thead th {
+    border: none;
+    font-weight: 600;
+    padding: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  .table tbody tr {
+    transition: all 0.3s ease;
+  }
+
+  .table tbody tr:hover {
+    background: #f8f9fa;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  }
+
+  .table tbody td {
+    padding: 18px 20px;
+    vertical-align: middle;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .transaction-id {
+    background: #f5f5f5;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #667eea;
+    font-weight: 600;
+  }
+
+  .amount {
+    font-size: 16px;
+    font-weight: bold;
+    color: #f5576c;
+  }
+
+  .badge {
+    padding: 8px 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+
+  .badge.bg-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+  }
+
+  .badge.bg-success {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
+  }
+
+  .table-responsive {
+    border-radius: 15px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 30px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .empty-state i {
+    font-size: 48px;
+    color: #ddd;
+    margin-bottom: 20px;
+  }
+
+  .page-title {
+    color: white;
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 28px;
+  }
+
+  .page-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 20px;
+  }
+</style>
+
+<div class="admin-container">
+  <div class="container-fluid">
+    <!-- Page Header -->
+    <div class="mb-4">
+      <h2 class="page-title"><i class="fas fa-credit-card"></i> Payment Monitoring</h2>
+      <p class="page-subtitle">Monitor all payments and track revenue across your platform</p>
+    </div>
+
+    <!-- Admin Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
       <li class="nav-item">
         <a class="nav-link" href="/listings/admin/all-listings">
           <i class="fa-solid fa-building"></i> Listings
@@ -25,84 +224,85 @@
         </a>
       </li>
     </ul>
-  </div>
 
-  <h2><i class="fa-solid fa-credit-card"></i> Payment Monitoring (Admin)</h2>
-  <p class="text-muted">Monitor all payments and track revenue</p>
-  <hr>
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+      <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card stat-card revenue">
+          <div class="card-body">
+            <h5><i class="fas fa-money-bill-wave"></i> Total Revenue</h5>
+            <h3>₹<%= stats.totalAmount.toLocaleString("en-IN") %></h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card stat-card completed">
+          <div class="card-body">
+            <h5><i class="fas fa-check-circle"></i> Completed</h5>
+            <h3><%= stats.completedPayments %></h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card stat-card upi">
+          <div class="card-body">
+            <h5><i class="fas fa-mobile-alt"></i> UPI</h5>
+            <h3><%= stats.upiPayments %></h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card stat-card cash">
+          <div class="card-body">
+            <h5><i class="fas fa-coins"></i> Cash</h5>
+            <h3><%= stats.cashPayments %></h3>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <!-- Stats -->
-  <div class="row mb-4">
-    <div class="col-md-3">
-      <div class="card border-success">
-        <div class="card-body text-center">
-          <h5>Total Revenue</h5>
-          <h3 class="text-success">₹<%= stats.totalAmount.toLocaleString("en-IN") %></h3>
-        </div>
+    <!-- Payments Table -->
+    <% if(payments.length === 0) { %>
+      <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <h5>No payments yet</h5>
+        <p class="text-muted">Payments will appear here once bookings are confirmed and paid</p>
       </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card border-primary">
-        <div class="card-body text-center">
-          <h5>Completed</h5>
-          <h3 class="text-primary"><%= stats.completedPayments %></h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card border-info">
-        <div class="card-body text-center">
-          <h5>UPI</h5>
-          <h3 class="text-info"><%= stats.upiPayments %></h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card border-warning">
-        <div class="card-body text-center">
-          <h5>Cash</h5>
-          <h3 class="text-warning"><%= stats.cashPayments %></h3>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <% if(payments.length === 0) { %>
-    <div class="alert alert-info">No payments yet</div>
-  <% } else { %>
-    <div class="table-responsive">
-      <table class="table table-striped table-hover">
-        <thead class="table-dark">
-          <tr>
-            <th>Transaction ID</th>
-            <th>Customer</th>
-            <th>Amount</th>
-            <th>Method</th>
-            <th>Status</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% for(let payment of payments) { %>
-            <% if(payment.booking && payment.customer) { %>
-            <tr>
-              <td><code><%= payment.transactionId %></code></td>
-              <td><strong><%= payment.customer.username %></strong></td>
-              <td><strong style="color: #ff6b6b;">₹<%= payment.amount.toLocaleString("en-IN") %></strong></td>
-              <td>
-                <% if(payment.paymentMethod === 'upi') { %>
-                  <span class="badge bg-info">UPI</span>
-                <% } else { %>
-                  <span class="badge bg-success">Cash</span>
+    <% } else { %>
+      <div class="payment-table">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th><i class="fas fa-hashtag"></i> Transaction ID</th>
+                <th><i class="fas fa-user"></i> Customer</th>
+                <th><i class="fas fa-rupee-sign"></i> Amount</th>
+                <th><i class="fas fa-wallet"></i> Method</th>
+                <th><i class="fas fa-clock"></i> Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% for(let payment of payments) { %>
+                <% if(payment.booking && payment.customer) { %>
+                  <tr>
+                    <td><span class="transaction-id"><%= payment.transactionId.substring(0, 12) %>...</span></td>
+                    <td><strong><%= payment.customer.username %></strong></td>
+                    <td><span class="amount">₹<%= payment.amount.toLocaleString("en-IN") %></span></td>
+                    <td>
+                      <% if(payment.paymentMethod === 'upi') { %>
+                        <span class="badge bg-info"><i class="fas fa-mobile-alt"></i> UPI</span>
+                      <% } else { %>
+                        <span class="badge bg-success"><i class="fas fa-coins"></i> Cash</span>
+                      <% } %>
+                    </td>
+                    <td><small><%= new Date(payment.createdAt).toLocaleDateString() %></small></td>
+                  </tr>
                 <% } %>
-              </td>
-              <td><span class="badge bg-success">Completed</span></td>
-              <td><small><%= new Date(payment.createdAt).toLocaleDateString() %></small></td>
-            </tr>
-            <% } %>
-          <% } %>
-        </tbody>
-      </table>
-    </div>
-  <% } %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% } %>
+  </div>
 </div>
