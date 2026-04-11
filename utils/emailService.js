@@ -1,70 +1,111 @@
 const nodemailer = require('nodemailer');
 const dns = require('dns');
+const sgMail = require('@sendgrid/mail');
 
-// Force DNS to use IPv4 only on Render
-dns.setDefaultResultOrder('ipv4first');
+// Check which email service to use
+const USE_SENDGRID = !!process.env.SENDGRID_API_KEY;
+const USE_GMAIL = !!process.env.GMAIL_PASSWORD && !USE_SENDGRID;
 
-// Create transporter with Gmail configuration
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: process.env.SMTP_PORT || 587,
-  secure: false, // true for 465, false for other ports
-  family: 4, // Force IPv4 only
-  auth: {
-    user: process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com',
-    pass: process.env.GMAIL_PASSWORD || '', // Use app-specific password
-  },
-  tls: {
-    rejectUnauthorized: false,
-    minVersion: 'TLSv1.2' // Enforce TLS 1.2+
-  },
-  connectionTimeout: 10000, // 10 seconds
-  socketTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,
-  pool: {
-    maxConnections: 5,
-    maxMessages: 100,
-    rateDelta: 1000,
-    rateLimit: 5
-  },
-  logger: true, // Enable detailed logging
-  debug: true // Show debug output
-});
+// Configure email service
+let transporter = null;
 
-// Verify transporter connection on startup
-console.log('\n📧 [EMAIL SERVICE] Initializing...');
-console.log('   Environment Variables:');
-console.log('   - GMAIL_USER:', process.env.GMAIL_USER ? '✅ Set' : '❌ NOT SET');
-console.log('   - GMAIL_PASSWORD:', process.env.GMAIL_PASSWORD ? '✅ Set' : '❌ NOT SET');
-console.log('   - SMTP_HOST:', process.env.SMTP_HOST ? '✅ Set' : '❌ NOT SET');
-console.log('   - SMTP_PORT:', process.env.SMTP_PORT ? '✅ Set' : '❌ NOT SET');
+if (USE_SENDGRID) {
+  // SendGrid Configuration
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  console.log('\n📧 [EMAIL SERVICE] Using SENDGRID');
+  
+  // Create a wrapper for SendGrid
+  transporter = {
+    sendMail: async (mailOptions, callback) => {
+      try {
+        const msg = {
+          to: mailOptions.to,
+          from: process.env.SENDGRID_FROM_EMAIL || mailOptions.from || 'noreply@wanderlust.com',
+          subject: mailOptions.subject,
+          html: mailOptions.html,
+        };
+        
+        const result = await sgMail.send(msg);
+        callback(null, { messageId: result[0].headers['x-message-id'] });
+      } catch (error) {
+        callback(error);
+      }
+    }
+  };
+  
+  console.log('   Status: Ready (SendGrid)');
+  console.log('   From:', process.env.SENDGRID_FROM_EMAIL || 'noreply@wanderlust.com');
+  
+} else if (USE_GMAIL) {
+  // Gmail SMTP Configuration (Fallback)
+  // Force DNS to use IPv4 only on Render
+  dns.setDefaultResultOrder('ipv4first');
 
-if (!process.env.GMAIL_PASSWORD) {
-  console.warn('\n⚠️  WARNING: GMAIL_PASSWORD is NOT set!');
-  console.warn('   Email sending will FAIL without this variable.');
-  console.warn('   ACTION: Set GMAIL_PASSWORD in Render Environment tab\n');
+  // Create transporter with Gmail configuration
+  transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: process.env.SMTP_PORT || 587,
+    secure: false, // true for 465, false for other ports
+    family: 4, // Force IPv4 only
+    auth: {
+      user: process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com',
+      pass: process.env.GMAIL_PASSWORD || '', // Use app-specific password
+    },
+    tls: {
+      rejectUnauthorized: false,
+      minVersion: 'TLSv1.2' // Enforce TLS 1.2+
+    },
+    connectionTimeout: 10000, // 10 seconds
+    socketTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    pool: {
+      maxConnections: 5,
+      maxMessages: 100,
+      rateDelta: 1000,
+      rateLimit: 5
+    },
+    logger: true,
+    debug: true
+  });
+  
+  console.log('\n📧 [EMAIL SERVICE] Using GMAIL SMTP');
+  console.log('   Status: Configured');
+  console.log('   From:', process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com');
+  
+} else {
+  console.error('\n❌ [EMAIL SERVICE] No email provider configured!');
+  console.error('   Please set either:');
+  console.error('   - SENDGRID_API_KEY and SENDGRID_FROM_EMAIL');
+  console.error('   - Or GMAIL_USER and GMAIL_PASSWORD');
 }
 
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('❌ [EMAIL SERVICE] Connection FAILED');
-    console.error('   Error:', error.message);
-    console.error('   Code:', error.code);
-    console.error('   Command:', error.command);
-    console.log('\n   🔧 Fix:');
-    console.log('   1. Go to Render Dashboard > Environment');
-    console.log('   2. Add: GMAIL_USER=mohantysubhrajit22@gmail.com');
-    console.log('   3. Add: GMAIL_PASSWORD=nipuiksiwypwvlbd');
-    console.log('   4. Add: SMTP_HOST=smtp.gmail.com');
-    console.log('   5. Add: SMTP_PORT=587');
-    console.log('   6. Click Save and redeploy\n');
-  } else {
-    console.log('✅ [EMAIL SERVICE] Connection SUCCESSFUL');
-    console.log('   From:', process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com');
-    console.log('   SMTP:', process.env.SMTP_HOST || 'smtp.gmail.com:587');
-    console.log('   Status: Ready to send emails\n');
+// Verify transporter connection on startup
+if (transporter) {
+  console.log('\n📧 [EMAIL SERVICE] Initializing...');
+  console.log('   Environment Variables:');
+  console.log('   - SENDGRID_API_KEY:', process.env.SENDGRID_API_KEY ? '✅ Set' : '❌ NOT SET');
+  console.log('   - GMAIL_USER:', process.env.GMAIL_USER ? '✅ Set' : '❌ NOT SET');
+  console.log('   - GMAIL_PASSWORD:', process.env.GMAIL_PASSWORD ? '✅ Set' : '❌ NOT SET');
+  
+  if (USE_GMAIL && transporter.verify) {
+    transporter.verify((error, success) => {
+      if (error) {
+        console.error('❌ [EMAIL SERVICE] Connection FAILED');
+        console.error('   Error:', error.message);
+        console.error('   Code:', error.code);
+        console.error('   Command:', error.command);
+        console.log('\n   🔧 Fix:');
+        console.log('   1. Consider using SendGrid instead (more reliable on Render)');
+        console.log('   2. Or verify GMAIL_USER and GMAIL_PASSWORD are correct');
+        console.log('   3. Use app-specific password, not regular Gmail password\n');
+      } else {
+        console.log('✅ [EMAIL SERVICE] Connection SUCCESSFUL');
+        console.log('   SMTP:', process.env.SMTP_HOST || 'smtp.gmail.com:587');
+        console.log('   Status: Ready to send emails\n');
+      }
+    });
   }
-});
+}
 
 /**
  * Validate email address
