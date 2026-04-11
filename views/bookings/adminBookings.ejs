@@ -35,24 +35,6 @@
   <% if(bookings.length === 0) { %>
     <div class="alert alert-info">
       <i class="fa-solid fa-inbox"></i> No bookings yet.
-      <% if(debugInfo) { %>
-        <hr>
-        <small>
-          <strong>Debug Info:</strong><br>
-          Total in DB: <%= debugInfo.totalInDB %><br>
-          After populate: <%= debugInfo.afterPopulate %><br>
-          Valid: <%= debugInfo.validBookings %><br>
-          Invalid: <%= debugInfo.invalidBookings %>
-          <% if(debugInfo.invalidBookings.length > 0) { %>
-            <div class="mt-2">
-              <strong>Invalid Bookings:</strong>
-              <% debugInfo.invalidBookings.forEach(b => { %>
-                <div>- <%= b.id %>: <%= b.reason %></div>
-              <% }) %>
-            </div>
-          <% } %>
-        </small>
-      <% } %>
     </div>
   <% } else { %>
     <!-- Desktop Table View -->
