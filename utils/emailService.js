@@ -26,12 +26,15 @@ const transporter = nodemailer.createTransport({
 transporter.verify((error, success) => {
   if (error) {
     console.error('❌ Email service connection error:', error.message);
-    console.log('Troubleshooting tips:');
+    console.error('   Error code:', error.code);
+    console.log('\n⚠️ Troubleshooting tips:');
     console.log('1. Check GMAIL_USER and GMAIL_PASSWORD in .env file');
     console.log('2. Ensure you are using an app-specific password (not your regular Gmail password)');
-    console.log('3. Enable "Less secure app access" in Gmail settings if needed');
+    console.log('3. Check Gmail credentials: USER=' + (process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com'));
   } else {
     console.log('✓ Email service ready and authenticated');
+    console.log('  From:', process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com');
+    console.log('  SMTP:', process.env.SMTP_HOST || 'smtp.gmail.com');
   }
 });
 
@@ -171,27 +174,38 @@ const sendBookingConfirmation = async (options) => {
       html: htmlContent
     };
     
+    console.log(`📤 [EMAIL] Preparing booking confirmation`);
+    console.log(`   From: ${mailOptions.from}`);
+    console.log(`   To: ${to}`);
+    
     // Send email with timeout
     const sendPromise = new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
+        console.error(`⏱️  [EMAIL] Timeout waiting for SMTP response`);
         reject(new Error('Email send timeout after 10 seconds'));
       }, 10000);
       
+      console.log(`📨 [EMAIL] Sending via SMTP...`);
       transporter.sendMail(mailOptions, (error, info) => {
         clearTimeout(timeout);
-        if (error) reject(error);
-        else resolve(info);
+        if (error) {
+          console.error(`❌ [EMAIL] SMTP Error: ${error.message}`);
+          console.error(`   Code: ${error.code}`);
+          reject(error);
+        } else {
+          console.log(`✅ [EMAIL] Accepted by SMTP server`);
+          console.log(`   Message-ID: ${info.messageId}`);
+          resolve(info);
+        }
       });
     });
     
     const info = await sendPromise;
-    console.log('✅ Booking confirmation email sent to:', to);
-    console.log('   Message ID:', info.messageId);
+    console.log(`✅ [EMAIL] Booking confirmation sent successfully to: ${to}`);
     return { success: true, message: 'Booking confirmation email sent successfully', sent: true };
   } catch (error) {
-    console.error('⚠️  Error sending booking confirmation email to:', to);
-    console.error('   Error message:', error.message);
-    console.error('   Error code:', error.code);
+    console.error(`❌ [EMAIL] Failed to send booking confirmation to: ${to}`);
+    console.error(`   Error: ${error.message}`);
     return { success: false, message: error.message, sent: false };
   }
 };
