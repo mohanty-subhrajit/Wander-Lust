@@ -1,26 +1,34 @@
 const nodemailer = require('nodemailer');
+const dns = require('dns');
+
+// Force DNS to use IPv4 only on Render
+dns.setDefaultResultOrder('ipv4first');
 
 // Create transporter with Gmail configuration
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: process.env.SMTP_PORT || 587,
   secure: false, // true for 465, false for other ports
-  family: 4, // Force IPv4 only (fixes Render ENETUNREACH error)
+  family: 4, // Force IPv4 only
   auth: {
     user: process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com',
     pass: process.env.GMAIL_PASSWORD || '', // Use app-specific password
   },
   tls: {
-    rejectUnauthorized: false // For development - allows self-signed certificates
+    rejectUnauthorized: false,
+    minVersion: 'TLSv1.2' // Enforce TLS 1.2+
   },
-  connectionTimeout: 5000, // 5 seconds
-  socketTimeout: 5000, // 5 seconds
+  connectionTimeout: 10000, // 10 seconds
+  socketTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000,
   pool: {
     maxConnections: 5,
     maxMessages: 100,
     rateDelta: 1000,
     rateLimit: 5
-  }
+  },
+  logger: true, // Enable detailed logging
+  debug: true // Show debug output
 });
 
 // Verify transporter connection on startup
