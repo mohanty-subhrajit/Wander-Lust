@@ -23,18 +23,37 @@ const transporter = nodemailer.createTransport({
 });
 
 // Verify transporter connection on startup
+console.log('\n📧 [EMAIL SERVICE] Initializing...');
+console.log('   Environment Variables:');
+console.log('   - GMAIL_USER:', process.env.GMAIL_USER ? '✅ Set' : '❌ NOT SET');
+console.log('   - GMAIL_PASSWORD:', process.env.GMAIL_PASSWORD ? '✅ Set' : '❌ NOT SET');
+console.log('   - SMTP_HOST:', process.env.SMTP_HOST ? '✅ Set' : '❌ NOT SET');
+console.log('   - SMTP_PORT:', process.env.SMTP_PORT ? '✅ Set' : '❌ NOT SET');
+
+if (!process.env.GMAIL_PASSWORD) {
+  console.warn('\n⚠️  WARNING: GMAIL_PASSWORD is NOT set!');
+  console.warn('   Email sending will FAIL without this variable.');
+  console.warn('   ACTION: Set GMAIL_PASSWORD in Render Environment tab\n');
+}
+
 transporter.verify((error, success) => {
   if (error) {
-    console.error('❌ Email service connection error:', error.message);
-    console.error('   Error code:', error.code);
-    console.log('\n⚠️ Troubleshooting tips:');
-    console.log('1. Check GMAIL_USER and GMAIL_PASSWORD in .env file');
-    console.log('2. Ensure you are using an app-specific password (not your regular Gmail password)');
-    console.log('3. Check Gmail credentials: USER=' + (process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com'));
+    console.error('❌ [EMAIL SERVICE] Connection FAILED');
+    console.error('   Error:', error.message);
+    console.error('   Code:', error.code);
+    console.error('   Command:', error.command);
+    console.log('\n   🔧 Fix:');
+    console.log('   1. Go to Render Dashboard > Environment');
+    console.log('   2. Add: GMAIL_USER=mohantysubhrajit22@gmail.com');
+    console.log('   3. Add: GMAIL_PASSWORD=nipuiksiwypwvlbd');
+    console.log('   4. Add: SMTP_HOST=smtp.gmail.com');
+    console.log('   5. Add: SMTP_PORT=587');
+    console.log('   6. Click Save and redeploy\n');
   } else {
-    console.log('✓ Email service ready and authenticated');
-    console.log('  From:', process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com');
-    console.log('  SMTP:', process.env.SMTP_HOST || 'smtp.gmail.com');
+    console.log('✅ [EMAIL SERVICE] Connection SUCCESSFUL');
+    console.log('   From:', process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com');
+    console.log('   SMTP:', process.env.SMTP_HOST || 'smtp.gmail.com:587');
+    console.log('   Status: Ready to send emails\n');
   }
 });
 
