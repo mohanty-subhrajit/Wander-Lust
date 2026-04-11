@@ -1,18 +1,26 @@
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 const dns = require('dns');
 
 // Check which email service to use
-const USE_BREVO = !!process.env.BREVO_SMTP_USER;
-const USE_GMAIL = !!process.env.GMAIL_PASSWORD && !USE_BREVO;
+const USE_BREVO_API = !!process.env.BREVO_API_KEY;
+const USE_BREVO_SMTP = !!process.env.BREVO_SMTP_USER && !USE_BREVO_API;
+const USE_GMAIL = !!process.env.GMAIL_PASSWORD && !USE_BREVO_API && !USE_BREVO_SMTP;
 
 // Configure email service
 let transporter = null;
 
-if (USE_BREVO) {
-  // Brevo SMTP Configuration (Recommended)
+if (USE_BREVO_API) {
+  // Brevo API Configuration (Recommended - works on Render)
+  console.log('\n📧 [EMAIL SERVICE] Using BREVO API');
+  console.log('   Mode: HTTP REST API');
+  console.log('   Status: Ready to send emails\n');
+  
+} else if (USE_BREVO_SMTP) {
+  // Brevo SMTP Configuration
   transporter = nodemailer.createTransport({
     host: process.env.BREVO_SMTP_SERVER || 'smtp-relay.brevo.com',
-    port: 587, // Brevo SMTP port (fixed value)
+    port: 587,
     secure: false,
     auth: {
       user: process.env.BREVO_SMTP_USER,
@@ -24,7 +32,7 @@ if (USE_BREVO) {
   
   console.log('\n📧 [EMAIL SERVICE] Using BREVO SMTP');
   console.log('   Host:', process.env.BREVO_SMTP_SERVER || 'smtp-relay.brevo.com');
-  console.log('   Port: 587 (Brevo Standard)');
+  console.log('   Port: 587');
   console.log('   From:', process.env.BREVO_FROM_EMAIL || 'noreply@wanderlust.com');
   console.log('   Status: Ready to send emails\n');
   
@@ -98,6 +106,72 @@ if (transporter) {
     });
   }
 }
+
+/**
+ * Send email via Brevo API
+ */
+const sendWithBrevoAPI = async (mailOptions) => {
+  try {
+    const response = await axios.post(
+      'https://api.brevo.com/v3/smtp/email',
+      {
+        sender: {
+          email: process.env.BREVO_FROM_EMAIL || 'mohantysubhrajit22@gmail.com',
+          name: 'Wanderlust',
+        },
+        to: [
+          {
+            email: mailOptions.to,
+            name: mailOptions.to.split('@')[0],
+          },
+        ],
+        subject: mailOptions.subject,
+        htmlContent: mailOptions.html,
+      },
+      {
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000,
+      }
+    );
+
+    console.log(`✅ [EMAIL API] Email sent via Brevo API`);
+    console.log(`   Message ID: ${response.data.messageId}`);
+    return { success: true, messageId: response.data.messageId };
+  } catch (error) {
+    console.error(`❌ [EMAIL API] Failed to send email via Brevo API`);
+    console.error(`   Error:`, error.response?.data?.message || error.message);
+    throw error;
+  }
+};
+
+/**
+ * Send email via SMTP (Nodemailer)
+ */
+const sendWithSMTP = async (mailOptions) => {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      console.error(`⏱️  [EMAIL] Timeout waiting for SMTP response`);
+      reject(new Error('Email send timeout after 10 seconds'));
+    }, 10000);
+
+    console.log(`📨 [EMAIL] Sending via SMTP...`);
+    transporter.sendMail(mailOptions, (error, info) => {
+      clearTimeout(timeout);
+      if (error) {
+        console.error(`❌ [EMAIL] SMTP Error: ${error.message}`);
+        console.error(`   Code: ${error.code}`);
+        reject(error);
+      } else {
+        console.log(`✅ [EMAIL] Accepted by SMTP server`);
+        console.log(`   Message-ID: ${info.messageId}`);
+        resolve(info);
+      }
+    });
+  });
+};
 
 /**
  * Validate email address
@@ -240,30 +314,15 @@ const sendBookingConfirmation = async (options) => {
     console.log(`   To: ${to}`);
     console.log(`   Environment: ${process.env.NODE_ENV === 'production' ? '🌐 RENDER (Production)' : '💻 Local'}`);
     
-    // Send email with timeout
-    const sendPromise = new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        console.error(`⏱️  [EMAIL] Timeout waiting for SMTP response`);
-        reject(new Error('Email send timeout after 10 seconds'));
-      }, 10000);
-      
-      console.log(`📨 [EMAIL] Sending via SMTP...`);
-      transporter.sendMail(mailOptions, (error, info) => {
-        clearTimeout(timeout);
-        if (error) {
-          console.error(`❌ [EMAIL] SMTP Error: ${error.message}`);
-          console.error(`   Code: ${error.code}`);
-          console.error(`   Command: ${error.command}`);
-          reject(error);
-        } else {
-          console.log(`✅ [EMAIL] Accepted by SMTP server`);
-          console.log(`   Message-ID: ${info.messageId}`);
-          resolve(info);
-        }
-      });
-    });
+    let result;
+    if (USE_BREVO_API) {
+      result = await sendWithBrevoAPI(mailOptions);
+    } else if (transporter) {
+      result = await sendWithSMTP(mailOptions);
+    } else {
+      throw new Error('No email service configured');
+    }
     
-    const info = await sendPromise;
     console.log(`✅ [EMAIL] Booking confirmation sent successfully to: ${to}`);
     return { success: true, message: 'Booking confirmation email sent successfully', sent: true };
   } catch (error) {
@@ -356,23 +415,18 @@ const sendPaymentReceipt = async (options) => {
       html: htmlContent
     };
     
-    // Send email with timeout
-    const sendPromise = new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Email send timeout after 10 seconds'));
-      }, 10000);
-      
-      transporter.sendMail(mailOptions, (error, info) => {
-        clearTimeout(timeout);
-        if (error) reject(error);
-        else resolve(info);
-      });
-    });
+    console.log(`📧 Sending payment receipt email to: ${to}`);
     
-    const info = await sendPromise;
-    console.log('✅ Payment receipt email sent to:', to);
-    console.log('   Message ID:', info.messageId);
-    return { success: true, message: 'Payment receipt email sent successfully', sent: true };
+    let result;
+    if (USE_BREVO_API) {
+      result = await sendWithBrevoAPI(mailOptions);
+    } else if (transporter) {
+      result = await sendWithSMTP(mailOptions);
+    } else {
+      throw new Error('No email service configured');
+    }
+    
+    return { success: true, message: 'Payment receipt sent successfully', sent: true };
   } catch (error) {
     console.error('⚠️  Error sending payment receipt email to:', to);
     console.error('   Error message:', error.message);
