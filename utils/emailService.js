@@ -41,40 +41,18 @@ transporter.verify((error, success) => {
  * @returns {Object} - { isValid: boolean, message: string }
  */
 const validateEmail = (email) => {
-  // Basic email regex pattern
+  // Simple email regex pattern
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   
   if (!email || typeof email !== 'string') {
-    return { isValid: false, message: 'Email is required and must be a string' };
+    return { isValid: false, message: 'Email is required' };
   }
   
   email = email.trim();
   
+  // Just check basic format, allow all emails
   if (!emailRegex.test(email)) {
     return { isValid: false, message: 'Invalid email format' };
-  }
-  
-  // Check for dummy email domains (only warn, don't block in production)
-  const dummyDomains = [
-    'test.com',
-    'temp.email',
-    '10minutemail.com',
-    'guerrillamail.com',
-    'mailinator.com',
-    'temp-mail.org',
-    'throwaway.email',
-    'yopmail.com',
-    'fakeinbox.com',
-    'robinhoodie.com',
-    'tempmail.io',
-    'maildrop.cc'
-  ];
-  
-  const domain = email.split('@')[1].toLowerCase();
-  
-  if (dummyDomains.includes(domain)) {
-    console.warn(`⚠️ Dummy email domain detected: ${domain}`);
-    // Allow it but log warning in development
   }
   
   return { isValid: true, message: 'Email is valid' };

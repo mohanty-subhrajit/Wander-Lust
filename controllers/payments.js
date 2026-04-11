@@ -122,16 +122,18 @@ module.exports.completeUpiPayment = async (req, res) => {
     booking.paymentMethod = "upi";
     await booking.save();
     
-    // Send payment receipt email
-    const emailResult = await sendPaymentReceipt({
-      to: booking.customer.email,
-      username: booking.customer.username,
-      booking: booking,
-      listing: booking.listing
-    });
-    
-    if (!emailResult.sent) {
-      console.log("Payment receipt email sending issue:", emailResult.message);
+    // Send payment receipt email (with proper await)
+    try {
+      const emailResult = await sendPaymentReceipt({
+        to: booking.customer.email,
+        username: booking.customer.username,
+        booking: booking,
+        listing: booking.listing
+      });
+      
+      console.log(`📧 Payment receipt email:`, emailResult.sent ? '✅ Sent' : '⚠️ Failed');
+    } catch (emailError) {
+      console.error(`⚠️ Email error (continuing anyway):`, emailError.message);
     }
     
     req.flash("success", "Payment completed successfully!");
@@ -189,6 +191,20 @@ module.exports.processPayment = async (req, res) => {
       booking.paymentStatus = "pending";
       booking.paymentMethod = "cash";
       await booking.save();
+      
+      // Send payment receipt email for cash payment
+      try {
+        const emailResult = await sendPaymentReceipt({
+          to: booking.customer.email,
+          username: booking.customer.username,
+          booking: booking,
+          listing: booking.listing
+        });
+        
+        console.log(`📧 Cash payment email:`, emailResult.sent ? '✅ Sent' : '⚠️ Failed');
+      } catch (emailError) {
+        console.error(`⚠️ Email error (continuing anyway):`, emailError.message);
+      }
       
       req.flash("success", "Payment method set to Cash on Arrival. Please pay at property check-in.");
       res.redirect(`/payments/success/${bookingId}`);

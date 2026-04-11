@@ -32,13 +32,10 @@
         <a class="nav-link" href="/listings">Explore</a>
         <% if(currUser) { %>
           <a class="nav-link" href="/bookings/my-bookings">My Bookings</a>
-          <a class="nav-link" href="/users/profile"><b>My Profile</b></a>
-        <% } %>
-        <% if(currUser && hasBookingsToManage) { %>
           <a class="nav-link" href="/bookings/manage">
-            <b>Manage Bookings</b>
-            <span class="badge bg-warning text-dark ms-1">New</span>
+            <i class="fa-solid fa-calendar-check"></i> Manage Bookings
           </a>
+          <a class="nav-link" href="/users/profile"><b>My Profile</b></a>
         <% } %>
         <% if(currUser && currUser.isAdmin) { %>
           <a class="nav-link" href="/listings/admin/all-listings"><b>Admin</b></a>
