@@ -12,7 +12,7 @@ if (!process.env.SENDGRID_API_KEY) {
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const msg = {
-  to: 'mohantysubhrajit22@gmail.com', // Changed to main email
+  to: 'subhrajit578mohanty@gmail.com', // Your backup email
   from: process.env.SENDGRID_FROM_EMAIL || 'noreply@wanderlust.com', // SendGrid verified sender
   subject: '✅ SendGrid Integration Test - WanderLust',
   html: `

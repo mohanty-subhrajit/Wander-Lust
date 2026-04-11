@@ -1,40 +1,32 @@
 const nodemailer = require('nodemailer');
 const dns = require('dns');
-const sgMail = require('@sendgrid/mail');
 
 // Check which email service to use
-const USE_SENDGRID = !!process.env.SENDGRID_API_KEY;
-const USE_GMAIL = !!process.env.GMAIL_PASSWORD && !USE_SENDGRID;
+const USE_BREVO = !!process.env.BREVO_SMTP_USER;
+const USE_GMAIL = !!process.env.GMAIL_PASSWORD && !USE_BREVO;
 
 // Configure email service
 let transporter = null;
 
-if (USE_SENDGRID) {
-  // SendGrid Configuration
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  console.log('\n📧 [EMAIL SERVICE] Using SENDGRID');
+if (USE_BREVO) {
+  // Brevo SMTP Configuration (Recommended)
+  transporter = nodemailer.createTransport({
+    host: process.env.BREVO_SMTP_SERVER || 'smtp-relay.brevo.com',
+    port: process.env.BREVO_SMTP_PORT || 587,
+    secure: false,
+    auth: {
+      user: process.env.BREVO_SMTP_USER,
+      pass: process.env.BREVO_SMTP_PASSWORD,
+    },
+    connectionTimeout: 10000,
+    socketTimeout: 10000,
+  });
   
-  // Create a wrapper for SendGrid
-  transporter = {
-    sendMail: async (mailOptions, callback) => {
-      try {
-        const msg = {
-          to: mailOptions.to,
-          from: process.env.SENDGRID_FROM_EMAIL || mailOptions.from || 'noreply@wanderlust.com',
-          subject: mailOptions.subject,
-          html: mailOptions.html,
-        };
-        
-        const result = await sgMail.send(msg);
-        callback(null, { messageId: result[0].headers['x-message-id'] });
-      } catch (error) {
-        callback(error);
-      }
-    }
-  };
-  
-  console.log('   Status: Ready (SendGrid)');
-  console.log('   From:', process.env.SENDGRID_FROM_EMAIL || 'noreply@wanderlust.com');
+  console.log('\n📧 [EMAIL SERVICE] Using BREVO SMTP');
+  console.log('   Host:', process.env.BREVO_SMTP_SERVER || 'smtp-relay.brevo.com');
+  console.log('   Port:', process.env.BREVO_SMTP_PORT || 587);
+  console.log('   From:', process.env.BREVO_FROM_EMAIL || 'noreply@wanderlust.com');
+  console.log('   Status: Ready to send emails\n');
   
 } else if (USE_GMAIL) {
   // Gmail SMTP Configuration (Fallback)
@@ -75,7 +67,7 @@ if (USE_SENDGRID) {
 } else {
   console.error('\n❌ [EMAIL SERVICE] No email provider configured!');
   console.error('   Please set either:');
-  console.error('   - SENDGRID_API_KEY and SENDGRID_FROM_EMAIL');
+  console.error('   - BREVO_SMTP_USER and BREVO_SMTP_PASSWORD');
   console.error('   - Or GMAIL_USER and GMAIL_PASSWORD');
 }
 
@@ -83,7 +75,7 @@ if (USE_SENDGRID) {
 if (transporter) {
   console.log('\n📧 [EMAIL SERVICE] Initializing...');
   console.log('   Environment Variables:');
-  console.log('   - SENDGRID_API_KEY:', process.env.SENDGRID_API_KEY ? '✅ Set' : '❌ NOT SET');
+  console.log('   - BREVO_SMTP_USER:', process.env.BREVO_SMTP_USER ? '✅ Set' : '❌ NOT SET');
   console.log('   - GMAIL_USER:', process.env.GMAIL_USER ? '✅ Set' : '❌ NOT SET');
   console.log('   - GMAIL_PASSWORD:', process.env.GMAIL_PASSWORD ? '✅ Set' : '❌ NOT SET');
   
@@ -95,7 +87,7 @@ if (transporter) {
         console.error('   Code:', error.code);
         console.error('   Command:', error.command);
         console.log('\n   🔧 Fix:');
-        console.log('   1. Consider using SendGrid instead (more reliable on Render)');
+        console.log('   1. Consider using Brevo instead (more reliable on Render)');
         console.log('   2. Or verify GMAIL_USER and GMAIL_PASSWORD are correct');
         console.log('   3. Use app-specific password, not regular Gmail password\n');
       } else {
@@ -237,7 +229,7 @@ const sendBookingConfirmation = async (options) => {
   
   try {
     const mailOptions = {
-      from: process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com',
+      from: process.env.BREVO_FROM_EMAIL || process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com',
       to: to,
       subject: `Booking Confirmed - ${listing.title}`,
       html: htmlContent
@@ -358,7 +350,7 @@ const sendPaymentReceipt = async (options) => {
   
   try {
     const mailOptions = {
-      from: process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com',
+      from: process.env.BREVO_FROM_EMAIL || process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com',
       to: to,
       subject: `Payment Receipt - ${listing.title}`,
       html: htmlContent
