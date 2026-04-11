@@ -111,6 +111,11 @@ app.use(async (req, res, next) => {
     
     const ownerListings = await Listing.find({ owner: req.user._id });
     const listingIds = ownerListings.map(listing => listing._id);
+    
+    // Check if user has any listings
+    res.locals.hasListings = ownerListings.length > 0;
+    
+    // Check for pending bookings
     const hasBookingsToManage = await Booking.countDocuments({ 
       listing: { $in: listingIds },
       status: "pending"
@@ -118,6 +123,7 @@ app.use(async (req, res, next) => {
     
     res.locals.hasBookingsToManage = hasBookingsToManage > 0;
   } else {
+    res.locals.hasListings = false;
     res.locals.hasBookingsToManage = false;
   }
   

@@ -32,7 +32,7 @@
         <a class="nav-link" href="/listings">Explore</a>
         <% if(currUser) { %>
           <a class="nav-link" href="/bookings/my-bookings">My Bookings</a>
-          <% if(!currUser.isAdmin) { %>
+          <% if(!currUser.isAdmin && hasListings) { %>
             <a class="nav-link" href="/bookings/manage">
               <i class="fa-solid fa-calendar-check"></i> Manage Bookings
             </a>
