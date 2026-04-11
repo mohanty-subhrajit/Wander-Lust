@@ -105,7 +105,11 @@ module.exports.allBookings = async (req, res) => {
   try {
     console.log("📋 [ADMIN] Fetching all bookings...");
     
-    // Fetch all bookings
+    // First, count all bookings in database (raw count)
+    const totalCount = await Booking.countDocuments({});
+    console.log(`📊 Total bookings in DB: ${totalCount}`);
+    
+    // Fetch all bookings with populate
     let bookings = await Booking.find({})
       .populate({
         path: "listing",
@@ -115,54 +119,67 @@ module.exports.allBookings = async (req, res) => {
         path: "customer",
         select: "username email"
       })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean(); // Use lean() for performance
     
-    console.log(`📊 Found ${bookings.length} total bookings`);
+    console.log(`📊 Found ${bookings.length} bookings after populate`);
     
     // Identify and log invalid bookings
     let validBookings = [];
     let invalidBookings = [];
     
-    bookings.forEach(booking => {
+    bookings.forEach((booking, index) => {
       // Check if populate was successful
-      if (booking.listing === null) {
+      if (!booking.listing || booking.listing === null) {
         invalidBookings.push({
           id: booking._id,
           reason: "listing_deleted",
           customer: booking.customer?.username || "unknown"
         });
-        console.warn(`⚠️ Booking ${booking._id}: Listing was deleted (listing is null)`);
-      } else if (booking.customer === null) {
+        console.warn(`⚠️ [${index}] Booking ${booking._id}: Listing was deleted (listing is null)`);
+      } else if (!booking.customer || booking.customer === null) {
         invalidBookings.push({
           id: booking._id,
           reason: "customer_deleted",
           listing: booking.listing?.title || "unknown"
         });
-        console.warn(`⚠️ Booking ${booking._id}: Customer deleted account (customer is null)`);
+        console.warn(`⚠️ [${index}] Booking ${booking._id}: Customer deleted account (customer is null)`);
       } else {
         // Booking is valid
         validBookings.push(booking);
+        console.log(`✅ [${index}] Valid: ${booking.listing.title} - ${booking.customer.username}`);
       }
     });
     
     // Log summary
+    console.log(`\n📊 SUMMARY:`);
+    console.log(`   Total in DB: ${totalCount}`);
+    console.log(`   After populate: ${bookings.length}`);
+    console.log(`   Valid: ${validBookings.length}`);
+    console.log(`   Invalid: ${invalidBookings.length}`);
+    
     if (invalidBookings.length > 0) {
-      console.log(`❌ ${invalidBookings.length} bookings are invalid:`);
+      console.log(`\n❌ Invalid bookings:`);
       invalidBookings.forEach(b => {
-        console.log(`   - Booking ${b.id}: ${b.reason}`);
+        console.log(`   - ${b.id}: ${b.reason}`);
       });
     }
-    
-    console.log(`✅ ${validBookings.length} valid bookings ready to display`);
     
     // Render with valid bookings only
     res.render("bookings/adminBookings.ejs", { 
       bookings: validBookings,
-      totalBookings: bookings.length,
-      invalidCount: invalidBookings.length
+      totalBookings: totalCount,
+      invalidCount: invalidBookings.length,
+      debugInfo: {
+        totalInDB: totalCount,
+        afterPopulate: bookings.length,
+        validBookings: validBookings.length,
+        invalidBookings: invalidBookings
+      }
     });
   } catch (error) {
     console.error("❌ Error fetching bookings:", error);
+    console.error("   Stack:", error.stack);
     req.flash("error", "Error loading bookings: " + error.message);
     res.redirect("/listings");
   }
