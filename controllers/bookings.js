@@ -107,18 +107,11 @@ module.exports.allBookings = async (req, res) => {
     
     // Fetch all bookings with populate - WITHOUT lean() for proper populate
     let bookings = await Booking.find({})
-      .populate({
-        path: "listing",
-        select: "title location owner price maxGuests"
-      })
-      .populate({
-        path: "customer",
-        select: "username email"
-      })
-      .sort({ createdAt: -1 })
-      .exec(); // Use exec() instead of lean()
+      .populate("listing")
+      .populate("customer")
+      .sort({ createdAt: -1 });
     
-    console.log(`📊 Found ${bookings.length} total bookings`);
+    console.log(`📊 BEFORE FILTERING: ${bookings.length} bookings`);
     
     // Filter out invalid bookings
     let validBookings = [];
@@ -127,27 +120,30 @@ module.exports.allBookings = async (req, res) => {
     for (let i = 0; i < bookings.length; i++) {
       const booking = bookings[i];
       
+      console.log(`[${i}] Booking ID: ${booking._id}`);
+      console.log(`    Listing exists: ${booking.listing ? 'YES' : 'NO'}`);
+      console.log(`    Customer exists: ${booking.customer ? 'YES' : 'NO'}`);
+      
       // Check if populate was successful
       if (!booking.listing) {
         invalidBookings.push({
           id: booking._id,
           reason: "listing_deleted"
         });
-        console.warn(`⚠️  [${i}] Booking ${booking._id}: Listing not found`);
+        console.warn(`⚠️  Booking ${booking._id}: Listing not found`);
       } else if (!booking.customer) {
         invalidBookings.push({
           id: booking._id,
           reason: "customer_deleted"
         });
-        console.warn(`⚠️  [${i}] Booking ${booking._id}: Customer not found`);
+        console.warn(`⚠️  Booking ${booking._id}: Customer not found`);
       } else {
         validBookings.push(booking);
-        console.log(`✅ [${i}] ${booking.listing.title} - ${booking.customer.username} (${booking.status})`);
+        console.log(`✅ Valid: ${booking.listing.title} - ${booking.customer.username}`);
       }
     }
     
-    console.log(`\n📊 SUMMARY:`);
-    console.log(`   Total: ${bookings.length} | Valid: ${validBookings.length} | Invalid: ${invalidBookings.length}`);
+    console.log(`\n📊 SUMMARY: Total=${bookings.length} | Valid=${validBookings.length} | Invalid=${invalidBookings.length}`);
     
     // Render with valid bookings only
     res.render("bookings/adminBookings.ejs", { 
@@ -157,6 +153,7 @@ module.exports.allBookings = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error fetching bookings:", error);
+    console.error("   Message:", error.message);
     console.error("   Stack:", error.stack);
     req.flash("error", "Error loading bookings: " + error.message);
     res.redirect("/listings");
