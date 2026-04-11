@@ -188,7 +188,7 @@ module.exports.processPayment = async (req, res) => {
       await payment.save();
       
       // Update booking payment status
-      booking.paymentStatus = "pending";
+      booking.paymentStatus = "unpaid";
       booking.paymentMethod = "cash";
       await booking.save();
       
