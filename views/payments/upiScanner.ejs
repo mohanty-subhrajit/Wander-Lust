@@ -1,0 +1,260 @@
+<%-layout("/layouts/boilerplate")%>
+
+<style>
+  .scanner-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 40px 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .scanner-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .scanner-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 30px 20px;
+    text-align: center;
+    color: white;
+  }
+
+  .scanner-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .scanner-header p {
+    font-size: 14px;
+    opacity: 0.9;
+    margin: 8px 0 0 0;
+  }
+
+  .scanner-body {
+    padding: 40px 30px;
+    text-align: center;
+  }
+
+  .qr-container {
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+
+  .qr-container img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .scanner-label {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .upi-id-display {
+    background: #f0f9ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 20px 0;
+    font-size: 13px;
+    color: #0c4a6e;
+  }
+
+  .upi-id-display code {
+    background: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    color: #667eea;
+  }
+
+  .amount-box {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+  }
+
+  .amount-box p {
+    margin: 0;
+    font-size: 13px;
+    opacity: 0.9;
+  }
+
+  .amount-box .amount {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 10px 0 0 0;
+  }
+
+  .instruction-box {
+    background: #fff7ed;
+    border-left: 4px solid #fb923c;
+    padding: 15px;
+    border-radius: 6px;
+    margin: 20px 0;
+    text-align: left;
+    font-size: 13px;
+    color: #92400e;
+  }
+
+  .instruction-box strong {
+    display: block;
+    margin-bottom: 8px;
+	  color: #b45309;
+  }
+
+  .instruction-box ol {
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  .instruction-box li {
+    margin: 4px 0;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 30px;
+  }
+
+  .btn-confirm {
+    flex: 1;
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 15px;
+  }
+
+  .btn-confirm:hover {
+    background: #5568d3;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    color: white;
+  }
+
+  .btn-back {
+    flex: 1;
+    background: #e5e7eb;
+    color: #374151;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 15px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-back:hover {
+    background: #d1d5db;
+    color: #1f2937;
+  }
+
+  .payment-timer {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 20px;
+  }
+
+  .timer-icon {
+    display: inline-block;
+    animation: spin 2s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+
+<div class="scanner-container">
+  <div class="row w-100">
+    <div class="col-12">
+      <div class="scanner-card">
+        <div class="scanner-header">
+          <h2><i class="fas fa-qrcode"></i> UPI Payment</h2>
+          <p>Scan the QR code below with your UPI app</p>
+        </div>
+
+        <div class="scanner-body">
+          <!-- QR Code -->
+          <% if (qrCode) { %>
+            <div class="qr-container">
+              <label class="scanner-label">Open your UPI app and scan the code</label>
+              <img src="<%= qrCode %>" alt="UPI QR Code" />
+            </div>
+          <% } %>
+
+          <!-- UPI ID Display -->
+          <% if (listingOwner && listingOwner.upiId) { %>
+            <div class="upi-id-display">
+              <strong>Send to:</strong> <%= listingOwner.username %> <br>
+              <strong>UPI ID:</strong> <code><%= listingOwner.upiId %></code>
+            </div>
+          <% } %>
+
+          <!-- Amount Box -->
+          <div class="amount-box">
+            <p>Amount to pay</p>
+            <div class="amount">₹<%= booking.totalPrice %></div>
+          </div>
+
+          <!-- Instructions -->
+          <div class="instruction-box">
+            <strong><i class="fas fa-info-circle"></i> How to pay:</strong>
+            <ol>
+              <li>Open your UPI app (Google Pay, PhonePe, Paytm, etc.)</li>
+              <li>Scan the QR code above</li>
+              <li>Enter your PIN and confirm</li>
+              <li>Click "Payment Done" below once transferred</li>
+            </ol>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="button-group">
+            <form method="POST" action="/payments/upi-scanner/<%= booking._id %>/complete" style="flex: 1;">
+              <button type="submit" class="btn-confirm">
+                <i class="fas fa-check-circle"></i> Payment Done
+              </button>
+            </form>
+            <a href="/payments/booking/<%= booking._id %>" class="btn-back">
+              <i class="fas fa-arrow-left"></i> Back
+            </a>
+          </div>
+
+          <!-- Timer -->
+          <div class="payment-timer">
+            <span class="timer-icon"><i class="fas fa-spinner"></i></span> Waiting for payment confirmation...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

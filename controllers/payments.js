@@ -36,10 +36,46 @@ module.exports.renderPaymentForm = async (req, res) => {
   res.render("payments/paymentForm.ejs", { booking, listingOwner });
 };
 
-// Process payment
-module.exports.processPayment = async (req, res) => {
+// Show UPI Scanner (Dummy Page)
+module.exports.showUpiScanner = async (req, res) => {
   const { bookingId } = req.params;
-  const { paymentMethod } = req.body;
+  const { paymentMethod } = req.query;
+  
+  const booking = await Booking.findById(bookingId)
+    .populate("listing")
+    .populate("customer");
+  
+  if (!booking) {
+    req.flash("error", "Booking not found!");
+    return res.redirect("/bookings/my-bookings");
+  }
+  
+  // Check if user is the customer
+  if (!booking.customer._id.equals(req.user._id)) {
+    req.flash("error", "You can only pay for your own bookings!");
+    return res.redirect("/bookings/my-bookings");
+  }
+  
+  // Get listing owner's UPI ID
+  const listingOwner = await User.findById(booking.listing.owner);
+  
+  // Generate QR code for UPI
+  let qrCode = null;
+  if (paymentMethod === "upi" && listingOwner && listingOwner.upiId) {
+    try {
+      const upiString = `upi://pay?receiver=${listingOwner.upiId}&amount=${booking.totalPrice}&tr=Wanderlust Booking`;
+      qrCode = await QRCode.toDataURL(upiString);
+    } catch (err) {
+      console.error("QR Code generation error:", err);
+    }
+  }
+  
+  res.render("payments/upiScanner.ejs", { booking, paymentMethod, qrCode, listingOwner });
+};
+
+// Complete UPI Payment (from scanner page)
+module.exports.completeUpiPayment = async (req, res) => {
+  const { bookingId } = req.params;
   
   const booking = await Booking.findById(bookingId)
     .populate("listing")
@@ -62,13 +98,13 @@ module.exports.processPayment = async (req, res) => {
       booking: bookingId,
       customer: req.user._id,
       amount: booking.totalPrice,
-      paymentMethod: paymentMethod,
+      paymentMethod: "upi",
       status: "completed"
     });
     
-    // Generate QR code if UPI method
-    if (paymentMethod === "upi") {
-      const listingOwner = await User.findById(booking.listing.owner);
+    // Generate QR code
+    const listingOwner = await User.findById(booking.listing.owner);
+    if (listingOwner && listingOwner.upiId) {
       const upiString = `upi://pay?receiver=${listingOwner.upiId}&amount=${booking.totalPrice}&tr=Wanderlust Booking`;
       const qrCode = await QRCode.toDataURL(upiString);
       payment.qrCode = qrCode;
@@ -83,16 +119,20 @@ module.exports.processPayment = async (req, res) => {
     
     // Update booking payment status
     booking.paymentStatus = "completed";
-    booking.paymentMethod = paymentMethod;
+    booking.paymentMethod = "upi";
     await booking.save();
     
     // Send payment receipt email
-    await sendPaymentReceipt({
+    const emailResult = await sendPaymentReceipt({
       to: booking.customer.email,
       username: booking.customer.username,
       booking: booking,
       listing: booking.listing
     });
+    
+    if (!emailResult.sent) {
+      console.log("Payment receipt email sending issue:", emailResult.message);
+    }
     
     req.flash("success", "Payment completed successfully!");
     res.redirect(`/payments/success/${bookingId}`);
@@ -100,6 +140,63 @@ module.exports.processPayment = async (req, res) => {
     console.error("Payment error:", error);
     req.flash("error", "Error processing payment. Please try again.");
     res.redirect(`/payments/booking/${bookingId}`);
+  }
+};
+
+// Process payment (for Cash on Arrival)
+module.exports.processPayment = async (req, res) => {
+  const { bookingId } = req.params;
+  const { paymentMethod } = req.body;
+  
+  const booking = await Booking.findById(bookingId)
+    .populate("listing")
+    .populate("customer");
+  
+  if (!booking) {
+    req.flash("error", "Booking not found!");
+    return res.redirect("/bookings/my-bookings");
+  }
+  
+  // Check if user is the customer
+  if (!booking.customer._id.equals(req.user._id)) {
+    req.flash("error", "You can only pay for your own bookings!");
+    return res.redirect("/bookings/my-bookings");
+  }
+  
+  // For UPI, redirect to scanner page
+  if (paymentMethod === "upi") {
+    return res.redirect(`/payments/upi-scanner/${bookingId}?paymentMethod=upi`);
+  }
+  
+  // For Cash on Arrival, just mark as pending and redirect
+  if (paymentMethod === "cash") {
+    try {
+      // Create payment record with pending status for cash
+      const payment = new Payment({
+        booking: bookingId,
+        customer: req.user._id,
+        amount: booking.totalPrice,
+        paymentMethod: "cash",
+        status: "pending"
+      });
+      
+      // Generate unique transaction ID
+      payment.transactionId = `TXN${Date.now()}${Math.random().toString(36).substr(2, 9)}`;
+      
+      await payment.save();
+      
+      // Update booking payment status
+      booking.paymentStatus = "pending";
+      booking.paymentMethod = "cash";
+      await booking.save();
+      
+      req.flash("success", "Payment method set to Cash on Arrival. Please pay at property check-in.");
+      res.redirect(`/payments/success/${bookingId}`);
+    } catch (error) {
+      console.error("Payment error:", error);
+      req.flash("error", "Error processing payment. Please try again.");
+      res.redirect(`/payments/booking/${bookingId}`);
+    }
   }
 };
 

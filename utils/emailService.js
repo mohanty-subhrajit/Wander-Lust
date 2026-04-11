@@ -9,14 +9,21 @@ const transporter = nodemailer.createTransport({
     user: process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com',
     pass: process.env.GMAIL_PASSWORD || '', // Use app-specific password
   },
+  tls: {
+    rejectUnauthorized: false // For development - allows self-signed certificates
+  }
 });
 
-// Verify transporter connection
+// Verify transporter connection on startup
 transporter.verify((error, success) => {
   if (error) {
-    console.log('Email service error:', error);
+    console.error('❌ Email service connection error:', error.message);
+    console.log('Troubleshooting tips:');
+    console.log('1. Check GMAIL_USER and GMAIL_PASSWORD in .env file');
+    console.log('2. Ensure you are using an app-specific password (not your regular Gmail password)');
+    console.log('3. Enable "Less secure app access" in Gmail settings if needed');
   } else {
-    console.log('Email service ready');
+    console.log('✓ Email service ready and authenticated');
   }
 });
 
@@ -39,10 +46,9 @@ const validateEmail = (email) => {
     return { isValid: false, message: 'Invalid email format' };
   }
   
-  // Check for dummy email domains
+  // Check for dummy email domains (only warn, don't block in production)
   const dummyDomains = [
     'test.com',
-    'example.com',
     'temp.email',
     '10minutemail.com',
     'guerrillamail.com',
@@ -59,7 +65,8 @@ const validateEmail = (email) => {
   const domain = email.split('@')[1].toLowerCase();
   
   if (dummyDomains.includes(domain)) {
-    return { isValid: false, message: `Dummy email domain detected: ${domain}` };
+    console.warn(`⚠️ Dummy email domain detected: ${domain}`);
+    // Allow it but log warning in development
   }
   
   return { isValid: true, message: 'Email is valid' };
@@ -171,16 +178,24 @@ const sendBookingConfirmation = async (options) => {
   `;
   
   try {
-    await transporter.sendMail({
+    const mailOptions = {
       from: process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com',
       to: to,
       subject: `Booking Confirmed - ${listing.title}`,
       html: htmlContent
-    });
+    };
+    
+    const info = await transporter.sendMail(mailOptions);
     console.log('✓ Booking confirmation email sent to:', to);
+    console.log('  Message ID:', info.messageId);
     return { success: true, message: 'Booking confirmation email sent successfully', sent: true };
   } catch (error) {
-    console.error('✗ Error sending booking confirmation email:', error.message);
+    console.error('✗ Error sending booking confirmation email to:', to);
+    console.error('  Error message:', error.message);
+    console.error('  Error code:', error.code);
+    if (error.response) {
+      console.error('  SMTP response:', error.response);
+    }
     return { success: false, message: error.message, sent: false };
   }
 };
@@ -247,16 +262,24 @@ const sendPaymentReceipt = async (options) => {
   `;
   
   try {
-    await transporter.sendMail({
+    const mailOptions = {
       from: process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com',
       to: to,
       subject: `Payment Receipt - ${listing.title}`,
       html: htmlContent
-    });
+    };
+    
+    const info = await transporter.sendMail(mailOptions);
     console.log('✓ Payment receipt email sent to:', to);
+    console.log('  Message ID:', info.messageId);
     return { success: true, message: 'Payment receipt email sent successfully', sent: true };
   } catch (error) {
-    console.error('✗ Error sending payment receipt email:', error.message);
+    console.error('✗ Error sending payment receipt email to:', to);
+    console.error('  Error message:', error.message);
+    console.error('  Error code:', error.code);
+    if (error.response) {
+      console.error('  SMTP response:', error.response);
+    }
     return { success: false, message: error.message, sent: false };
   }
 };

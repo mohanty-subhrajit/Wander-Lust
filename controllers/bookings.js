@@ -102,44 +102,123 @@ module.exports.myBookings = async (req, res) => {
 
 // Admin: Show all bookings
 module.exports.allBookings = async (req, res) => {
-  const bookings = await Booking.find({})
-    .populate("listing")
-    .populate("customer")
-    .sort({ createdAt: -1 });
-  res.render("bookings/adminBookings.ejs", { bookings });
+  try {
+    console.log("📋 [ADMIN] Fetching all bookings...");
+    
+    // Fetch all bookings
+    let bookings = await Booking.find({})
+      .populate({
+        path: "listing",
+        select: "title location owner price maxGuests"
+      })
+      .populate({
+        path: "customer",
+        select: "username email"
+      })
+      .sort({ createdAt: -1 });
+    
+    console.log(`📊 Found ${bookings.length} total bookings`);
+    
+    // Identify and log invalid bookings
+    let validBookings = [];
+    let invalidBookings = [];
+    
+    bookings.forEach(booking => {
+      // Check if populate was successful
+      if (booking.listing === null) {
+        invalidBookings.push({
+          id: booking._id,
+          reason: "listing_deleted",
+          customer: booking.customer?.username || "unknown"
+        });
+        console.warn(`⚠️ Booking ${booking._id}: Listing was deleted (listing is null)`);
+      } else if (booking.customer === null) {
+        invalidBookings.push({
+          id: booking._id,
+          reason: "customer_deleted",
+          listing: booking.listing?.title || "unknown"
+        });
+        console.warn(`⚠️ Booking ${booking._id}: Customer deleted account (customer is null)`);
+      } else {
+        // Booking is valid
+        validBookings.push(booking);
+      }
+    });
+    
+    // Log summary
+    if (invalidBookings.length > 0) {
+      console.log(`❌ ${invalidBookings.length} bookings are invalid:`);
+      invalidBookings.forEach(b => {
+        console.log(`   - Booking ${b.id}: ${b.reason}`);
+      });
+    }
+    
+    console.log(`✅ ${validBookings.length} valid bookings ready to display`);
+    
+    // Render with valid bookings only
+    res.render("bookings/adminBookings.ejs", { 
+      bookings: validBookings,
+      totalBookings: bookings.length,
+      invalidCount: invalidBookings.length
+    });
+  } catch (error) {
+    console.error("❌ Error fetching bookings:", error);
+    req.flash("error", "Error loading bookings: " + error.message);
+    res.redirect("/listings");
+  }
 };
 
 // Admin: Confirm booking
 module.exports.confirmBooking = async (req, res) => {
   let { id } = req.params;
+  console.log(`📨 Admin confirming booking: ${id}`);
+  
   const booking = await Booking.findById(id).populate("listing").populate("customer");
 
   if (!booking) {
+    console.warn(`❌ Booking not found: ${id}`);
     req.flash("error", "Booking not found!");
     return res.redirect("/bookings/admin/bookings");
   }
 
-  // Guests already reserved at booking time, just confirm
-  await Booking.findByIdAndUpdate(id, { status: "confirmed" });
-  
-  // Increment booking count
-  const listing = await Listing.findById(booking.listing._id);
-  if (listing) {
-    listing.bookingCount = (listing.bookingCount || 0) + 1;
-    await listing.save();
+  try {
+    console.log(`✅ Booking found. Status: ${booking.status} → confirming...`);
+    
+    // Guests already reserved at booking time, just confirm
+    await Booking.findByIdAndUpdate(id, { status: "confirmed" });
+    
+    // Increment booking count
+    const listing = await Listing.findById(booking.listing._id);
+    if (listing) {
+      listing.bookingCount = (listing.bookingCount || 0) + 1;
+      await listing.save();
+      console.log(`📊 Listing booking count updated: ${listing.bookingCount}`);
+    }
+    
+    // Send booking confirmation email
+    console.log(`📧 Sending confirmation email to: ${booking.customer.email}`);
+    const emailResult = await sendBookingConfirmation({
+      to: booking.customer.email,
+      username: booking.customer.username,
+      listing: booking.listing,
+      booking: booking,
+      paid: booking.paymentStatus === 'completed'
+    });
+    
+    if (emailResult.sent) {
+      console.log(`✅ Email sent successfully`);
+      req.flash("success", "Booking confirmed! Confirmation email sent.");
+    } else {
+      console.warn(`⚠️ Email failed: ${emailResult.message}`);
+      req.flash("success", "Booking confirmed! (Email could not be sent - check configuration)");
+    }
+    
+    res.redirect("/bookings/admin/bookings");
+  } catch (error) {
+    console.error("❌ Error confirming booking:", error.message);
+    req.flash("error", "Error confirming booking: " + error.message);
+    res.redirect("/bookings/admin/bookings");
   }
-  
-  // Send booking confirmation email
-  await sendBookingConfirmation({
-    to: booking.customer.email,
-    username: booking.customer.username,
-    listing: booking.listing,
-    booking: booking,
-    paid: booking.paymentStatus === 'completed'
-  });
-  
-  req.flash("success", "Booking confirmed!");
-  res.redirect("/bookings/admin/bookings");
 };
 
 // Admin: Reject booking — restore guest spots
@@ -201,51 +280,122 @@ module.exports.cancelBooking = async (req, res) => {
 
 // Owner: Show bookings for owner's listings
 module.exports.ownerBookings = async (req, res) => {
-  // Find all listings owned by the current user
-  const ownerListings = await Listing.find({ owner: req.user._id });
-  const listingIds = ownerListings.map(listing => listing._id);
-  
-  // Find all bookings for those listings
-  const bookings = await Booking.find({ listing: { $in: listingIds } })
-    .populate("listing")
-    .populate("customer")
-    .sort({ createdAt: -1 });
-  
-  res.render("bookings/ownerBookings.ejs", { bookings });
+  try {
+    console.log("📋 [OWNER] Fetching bookings for listings owned by:", req.user.username);
+    
+    // Find all listings owned by the current user
+    const ownerListings = await Listing.find({ owner: req.user._id });
+    const listingIds = ownerListings.map(listing => listing._id);
+    
+    console.log(`🏠 User owns ${ownerListings.length} listings`);
+    
+    if (listingIds.length === 0) {
+      console.log("ℹ️ User has no listings");
+      return res.render("bookings/ownerBookings.ejs", { bookings: [] });
+    }
+    
+    // Find all bookings for those listings
+    let bookings = await Booking.find({ listing: { $in: listingIds } })
+      .populate({
+        path: "listing",
+        select: "title location owner price"
+      })
+      .populate({
+        path: "customer",
+        select: "username email"
+      })
+      .sort({ createdAt: -1 });
+    
+    console.log(`📊 Found ${bookings.length} bookings for owner's listings`);
+    
+    // Filter out invalid bookings
+    let validBookings = [];
+    let invalidBookings = [];
+    
+    bookings.forEach(booking => {
+      if (booking.listing === null) {
+        invalidBookings.push({
+          id: booking._id,
+          reason: "listing_deleted"
+        });
+        console.warn(`⚠️ Booking ${booking._id}: Listing was deleted`);
+      } else if (booking.customer === null) {
+        invalidBookings.push({
+          id: booking._id,
+          reason: "customer_deleted"
+        });
+        console.warn(`⚠️ Booking ${booking._id}: Customer deleted account`);
+      } else {
+        validBookings.push(booking);
+      }
+    });
+    
+    console.log(`✅ ${validBookings.length} valid bookings for owner`);
+    
+    res.render("bookings/ownerBookings.ejs", { 
+      bookings: validBookings,
+      totalBookings: bookings.length,
+      invalidCount: invalidBookings.length
+    });
+  } catch (error) {
+    console.error("❌ Error fetching owner bookings:", error);
+    req.flash("error", "Error loading bookings: " + error.message);
+    res.redirect("/listings");
+  }
 };
 
 // Owner: Confirm booking for their listing
 module.exports.ownerConfirmBooking = async (req, res) => {
   let { id } = req.params;
+  console.log(`📨 Owner confirming booking: ${id}`);
+  
   const booking = await Booking.findById(id).populate("listing").populate("customer");
   
   // Check if the current user owns the listing
   if (!booking.listing.owner.equals(req.user._id)) {
+    console.warn(`❌ Unauthorized: User ${req.user._id} doesn't own listing ${booking.listing._id}`);
     req.flash("error", "You don't have permission to manage this booking");
     return res.redirect("/bookings/manage");
   }
 
-  // Guests already reserved at booking time, just confirm
-  await Booking.findByIdAndUpdate(id, { status: "confirmed" });
-  
-  // Increment booking count
-  const listing = await Listing.findById(booking.listing._id);
-  if (listing) {
-    listing.bookingCount = (listing.bookingCount || 0) + 1;
-    await listing.save();
+  try {
+    console.log(`✅ Booking found. Status: ${booking.status} → confirming...`);
+    
+    // Guests already reserved at booking time, just confirm
+    await Booking.findByIdAndUpdate(id, { status: "confirmed" });
+    
+    // Increment booking count
+    const listing = await Listing.findById(booking.listing._id);
+    if (listing) {
+      listing.bookingCount = (listing.bookingCount || 0) + 1;
+      await listing.save();
+      console.log(`📊 Listing booking count updated: ${listing.bookingCount}`);
+    }
+    
+    // Send booking confirmation email
+    console.log(`📧 Sending confirmation email to: ${booking.customer.email}`);
+    const emailResult = await sendBookingConfirmation({
+      to: booking.customer.email,
+      username: booking.customer.username,
+      listing: booking.listing,
+      booking: booking,
+      paid: booking.paymentStatus === 'completed'
+    });
+    
+    if (emailResult.sent) {
+      console.log(`✅ Email sent successfully`);
+      req.flash("success", "Booking confirmed successfully! Confirmation email sent. View it in the 'Confirmed' tab or start chatting with your guest.");
+    } else {
+      console.warn(`⚠️ Email failed: ${emailResult.message}`);
+      req.flash("success", "Booking confirmed successfully! (Email could not be sent) View it in the 'Confirmed' tab or start chatting with your guest.");
+    }
+    
+    res.redirect("/bookings/manage#confirmed");
+  } catch (error) {
+    console.error("❌ Error confirming booking:", error.message);
+    req.flash("error", "Error confirming booking: " + error.message);
+    res.redirect("/bookings/manage");
   }
-  
-  // Send booking confirmation email
-  await sendBookingConfirmation({
-    to: booking.customer.email,
-    username: booking.customer.username,
-    listing: booking.listing,
-    booking: booking,
-    paid: booking.paymentStatus === 'completed'
-  });
-  
-  req.flash("success", "Booking confirmed successfully! View it in the 'Confirmed' tab or start chatting with your guest.");
-  res.redirect("/bookings/manage#confirmed");
 };
 
 // Owner: Reject booking for their listing — restore guest spots
