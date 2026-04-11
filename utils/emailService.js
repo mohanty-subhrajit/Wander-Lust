@@ -12,7 +12,7 @@ if (USE_BREVO) {
   // Brevo SMTP Configuration (Recommended)
   transporter = nodemailer.createTransport({
     host: process.env.BREVO_SMTP_SERVER || 'smtp-relay.brevo.com',
-    port: process.env.BREVO_SMTP_PORT || 587,
+    port: 587, // Brevo SMTP port (fixed value)
     secure: false,
     auth: {
       user: process.env.BREVO_SMTP_USER,
@@ -24,7 +24,7 @@ if (USE_BREVO) {
   
   console.log('\n📧 [EMAIL SERVICE] Using BREVO SMTP');
   console.log('   Host:', process.env.BREVO_SMTP_SERVER || 'smtp-relay.brevo.com');
-  console.log('   Port:', process.env.BREVO_SMTP_PORT || 587);
+  console.log('   Port: 587 (Brevo Standard)');
   console.log('   From:', process.env.BREVO_FROM_EMAIL || 'noreply@wanderlust.com');
   console.log('   Status: Ready to send emails\n');
   
