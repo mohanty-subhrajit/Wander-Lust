@@ -11,6 +11,14 @@ const transporter = nodemailer.createTransport({
   },
   tls: {
     rejectUnauthorized: false // For development - allows self-signed certificates
+  },
+  connectionTimeout: 5000, // 5 seconds
+  socketTimeout: 5000, // 5 seconds
+  pool: {
+    maxConnections: 5,
+    maxMessages: 100,
+    rateDelta: 1000,
+    rateLimit: 5
   }
 });
 
@@ -185,17 +193,27 @@ const sendBookingConfirmation = async (options) => {
       html: htmlContent
     };
     
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✓ Booking confirmation email sent to:', to);
-    console.log('  Message ID:', info.messageId);
+    // Send email with timeout
+    const sendPromise = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Email send timeout after 10 seconds'));
+      }, 10000);
+      
+      transporter.sendMail(mailOptions, (error, info) => {
+        clearTimeout(timeout);
+        if (error) reject(error);
+        else resolve(info);
+      });
+    });
+    
+    const info = await sendPromise;
+    console.log('✅ Booking confirmation email sent to:', to);
+    console.log('   Message ID:', info.messageId);
     return { success: true, message: 'Booking confirmation email sent successfully', sent: true };
   } catch (error) {
-    console.error('✗ Error sending booking confirmation email to:', to);
-    console.error('  Error message:', error.message);
-    console.error('  Error code:', error.code);
-    if (error.response) {
-      console.error('  SMTP response:', error.response);
-    }
+    console.error('⚠️  Error sending booking confirmation email to:', to);
+    console.error('   Error message:', error.message);
+    console.error('   Error code:', error.code);
     return { success: false, message: error.message, sent: false };
   }
 };
@@ -269,17 +287,26 @@ const sendPaymentReceipt = async (options) => {
       html: htmlContent
     };
     
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✓ Payment receipt email sent to:', to);
-    console.log('  Message ID:', info.messageId);
+    // Send email with timeout
+    const sendPromise = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Email send timeout after 10 seconds'));
+      }, 10000);
+      
+      transporter.sendMail(mailOptions, (error, info) => {
+        clearTimeout(timeout);
+        if (error) reject(error);
+        else resolve(info);
+      });
+    });
+    
+    const info = await sendPromise;
+    console.log('✅ Payment receipt email sent to:', to);
+    console.log('   Message ID:', info.messageId);
     return { success: true, message: 'Payment receipt email sent successfully', sent: true };
   } catch (error) {
-    console.error('✗ Error sending payment receipt email to:', to);
-    console.error('  Error message:', error.message);
-    console.error('  Error code:', error.code);
-    if (error.response) {
-      console.error('  SMTP response:', error.response);
-    }
+    console.error('⚠️  Error sending payment receipt email to:', to);
+    console.error('   Error message:', error.message);
     return { success: false, message: error.message, sent: false };
   }
 };

@@ -85,7 +85,6 @@
           </thead>
           <tbody>
             <% for(let booking of filteredBookings) { %>
-              <% if(booking.listing && booking.customer) { %>
               <tr>
                 <td>
                   <strong><%= booking.customer.username %></strong><br>
@@ -131,7 +130,6 @@
                   <% } %>
                 </td>
               </tr>
-              <% } %>
             <% } %>
           </tbody>
         </table>
@@ -141,7 +139,6 @@
     <!-- Mobile Card View -->
     <div class="d-lg-none">
       <% for(let booking of filteredBookings) { %>
-        <% if(booking.listing && booking.customer) { %>
         <div class="card mb-3">
           <div class="card-body">
             <h5 class="card-title"><%= booking.listing.title %></h5>
@@ -187,7 +184,6 @@
             <% } %>
           </div>
         </div>
-        <% } %>
       <% } %>
     </div>
   <% } %>
