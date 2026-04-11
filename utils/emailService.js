@@ -205,6 +205,7 @@ const sendBookingConfirmation = async (options) => {
     console.log(`📤 [EMAIL] Preparing booking confirmation`);
     console.log(`   From: ${mailOptions.from}`);
     console.log(`   To: ${to}`);
+    console.log(`   Environment: ${process.env.NODE_ENV === 'production' ? '🌐 RENDER (Production)' : '💻 Local'}`);
     
     // Send email with timeout
     const sendPromise = new Promise((resolve, reject) => {
@@ -219,6 +220,7 @@ const sendBookingConfirmation = async (options) => {
         if (error) {
           console.error(`❌ [EMAIL] SMTP Error: ${error.message}`);
           console.error(`   Code: ${error.code}`);
+          console.error(`   Command: ${error.command}`);
           reject(error);
         } else {
           console.log(`✅ [EMAIL] Accepted by SMTP server`);
@@ -234,7 +236,21 @@ const sendBookingConfirmation = async (options) => {
   } catch (error) {
     console.error(`❌ [EMAIL] Failed to send booking confirmation to: ${to}`);
     console.error(`   Error: ${error.message}`);
-    return { success: false, message: error.message, sent: false };
+    console.error(`   Code: ${error.code}`);
+    
+    // Provide helpful suggestions based on error type
+    if (error.code === 'ENOTFOUND' || error.code === 'ENETUNREACH') {
+      console.error(`\n   📍 NETWORK ERROR on Render:`);
+      console.error(`   - Add GMAIL_USER and GMAIL_PASSWORD to Render Environment Variables`);
+      console.error(`   - Or consider using SendGrid as email provider`);
+    } else if (error.code === 'EAUTH') {
+      console.error(`\n   🔐 AUTHENTICATION ERROR:`);
+      console.error(`   - Check GMAIL_USER and GMAIL_PASSWORD are correct`);
+      console.error(`   - Use app-specific password, not regular Gmail password`);
+    }
+    
+    // Return graceful failure - booking is still confirmed
+    return { success: false, message: `Email not sent: ${error.message}`, sent: false };
   }
 };
 

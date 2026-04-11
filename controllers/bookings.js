@@ -103,7 +103,13 @@ module.exports.myBookings = async (req, res) => {
 // Admin: Show all bookings
 module.exports.allBookings = async (req, res) => {
   try {
-    console.log("📋 [ADMIN] Fetching all bookings...");
+    console.log("\n" + "═".repeat(80));
+    console.log("🔴 ADMIN PANEL - MANAGE ALL BOOKINGS");
+    console.log("═".repeat(80));
+    console.log(`👤 User: ${req.user.username} (${req.user.isAdmin ? 'ADMIN' : 'NOT ADMIN'})`);
+    console.log(`📍 URL: /bookings/admin/bookings`);
+    console.log(`⏰ Time: ${new Date().toLocaleString()}`);
+    console.log("─".repeat(80));
     
     // Fetch all bookings with populate - WITHOUT lean() for proper populate
     let bookings = await Booking.find({})
@@ -111,7 +117,7 @@ module.exports.allBookings = async (req, res) => {
       .populate("customer")
       .sort({ createdAt: -1 });
     
-    console.log(`📊 BEFORE FILTERING: ${bookings.length} bookings`);
+    console.log(`\n📊 DATABASE QUERY RESULT: ${bookings.length} bookings found\n`);
     
     // Filter out invalid bookings
     let validBookings = [];
@@ -120,30 +126,34 @@ module.exports.allBookings = async (req, res) => {
     for (let i = 0; i < bookings.length; i++) {
       const booking = bookings[i];
       
-      console.log(`[${i}] Booking ID: ${booking._id}`);
-      console.log(`    Listing exists: ${booking.listing ? 'YES' : 'NO'}`);
-      console.log(`    Customer exists: ${booking.customer ? 'YES' : 'NO'}`);
-      
       // Check if populate was successful
       if (!booking.listing) {
         invalidBookings.push({
           id: booking._id,
           reason: "listing_deleted"
         });
-        console.warn(`⚠️  Booking ${booking._id}: Listing not found`);
+        console.log(`[${i}] ⚠️  INVALID: ${booking._id} - Listing deleted`);
       } else if (!booking.customer) {
         invalidBookings.push({
           id: booking._id,
           reason: "customer_deleted"
         });
-        console.warn(`⚠️  Booking ${booking._id}: Customer not found`);
+        console.log(`[${i}] ⚠️  INVALID: ${booking._id} - Customer deleted`);
       } else {
         validBookings.push(booking);
-        console.log(`✅ Valid: ${booking.listing.title} - ${booking.customer.username}`);
+        const title = booking.listing.title.substring(0, 30);
+        const username = booking.customer.username;
+        const status = booking.status;
+        console.log(`[${i}] ✅ VALID: "${title}" | ${username} | ${status}`);
       }
     }
     
-    console.log(`\n📊 SUMMARY: Total=${bookings.length} | Valid=${validBookings.length} | Invalid=${invalidBookings.length}`);
+    console.log(`\n${"─".repeat(80)}`);
+    console.log(`📊 FILTERING RESULT:`);
+    console.log(`   Total bookings in DB: ${bookings.length}`);
+    console.log(`   Valid bookings: ${validBookings.length} ✅`);
+    console.log(`   Invalid bookings: ${invalidBookings.length} ⚠️`);
+    console.log(`${"─".repeat(80)}\n`);
     
     // Render with valid bookings only
     res.render("bookings/adminBookings.ejs", { 
@@ -152,7 +162,7 @@ module.exports.allBookings = async (req, res) => {
       invalidCount: invalidBookings.length
     });
   } catch (error) {
-    console.error("❌ Error fetching bookings:", error);
+    console.error("❌ ADMIN PANEL ERROR:", error);
     console.error("   Message:", error.message);
     console.error("   Stack:", error.stack);
     req.flash("error", "Error loading bookings: " + error.message);
@@ -199,10 +209,10 @@ module.exports.confirmBooking = async (req, res) => {
     
     if (emailResult.sent) {
       console.log(`✅ Email sent successfully`);
-      req.flash("success", "Booking confirmed! Confirmation email sent.");
+      req.flash("success", "Booking confirmed! Confirmation email sent to your inbox.");
     } else {
       console.warn(`⚠️ Email failed: ${emailResult.message}`);
-      req.flash("success", "Booking confirmed! (Email could not be sent - check configuration)");
+      req.flash("success", "Booking confirmed! (Confirmation email couldn't be sent at this moment, but your booking is secure. The host can still reach you through chat.)");
     }
     
     res.redirect("/bookings/admin/bookings");
@@ -273,17 +283,24 @@ module.exports.cancelBooking = async (req, res) => {
 // Owner: Show bookings for owner's listings
 module.exports.ownerBookings = async (req, res) => {
   try {
-    console.log("📋 [OWNER] Fetching bookings for listings owned by:", req.user.username);
+    console.log("\n" + "═".repeat(80));
+    console.log("🟢 OWNER PANEL - MANAGE MY LISTING BOOKINGS");
+    console.log("═".repeat(80));
+    console.log(`👤 User: ${req.user.username} (Owner)`);
+    console.log(`📍 URL: /bookings/manage`);
+    console.log(`⏰ Time: ${new Date().toLocaleString()}`);
+    console.log("─".repeat(80));
     
     // Find all listings owned by the current user
     const ownerListings = await Listing.find({ owner: req.user._id });
     const listingIds = ownerListings.map(listing => listing._id);
     
-    console.log(`🏠 User owns ${ownerListings.length} listings`);
+    console.log(`\n🏠 User owns: ${ownerListings.length} listings`);
     
     if (listingIds.length === 0) {
-      console.log("ℹ️ User has no listings");
-      return res.render("bookings/ownerBookings.ejs", { bookings: [] });
+      console.log("ℹ️ User has no listings - redirecting to create listings");
+      req.flash("info", "You don't have any listings yet. Create a listing first to manage bookings!");
+      return res.redirect("/listings/new");
     }
     
     // Find all bookings for those listings
@@ -298,7 +315,7 @@ module.exports.ownerBookings = async (req, res) => {
       })
       .sort({ createdAt: -1 });
     
-    console.log(`📊 Found ${bookings.length} bookings for owner's listings`);
+    console.log(`📊 Found: ${bookings.length} bookings for owner's listings`);
     
     // Filter out invalid bookings
     let validBookings = [];
@@ -322,7 +339,8 @@ module.exports.ownerBookings = async (req, res) => {
       }
     });
     
-    console.log(`✅ ${validBookings.length} valid bookings for owner`);
+    console.log(`✅ Valid bookings: ${validBookings.length}`);
+    console.log(`${validBookings.length > 0 ? "📋 Showing bookings for owner's listings" : "ℹ️ No valid bookings to display"}\n`);
     
     res.render("bookings/ownerBookings.ejs", { 
       bookings: validBookings,
