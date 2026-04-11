@@ -5,6 +5,7 @@ const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: process.env.SMTP_PORT || 587,
   secure: false, // true for 465, false for other ports
+  family: 4, // Force IPv4 only (fixes Render ENETUNREACH error)
   auth: {
     user: process.env.GMAIL_USER || 'mohantysubhrajit22@gmail.com',
     pass: process.env.GMAIL_PASSWORD || '', // Use app-specific password
