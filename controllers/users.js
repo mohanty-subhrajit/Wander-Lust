@@ -68,10 +68,17 @@ module.exports.deleteUser = async (req, res) => {
     return res.redirect("/users/admin/users");
   }
 
+  // Get all listings owned by this user
+  const userListings = await Listing.find({ owner: id });
+  const listingIds = userListings.map(listing => listing._id);
+  
+  // Delete bookings for this user's listings (from other customers)
+  await Booking.deleteMany({ listing: { $in: listingIds } });
+  
   // Delete user's listings
   await Listing.deleteMany({ owner: id });
   
-  // Delete user's bookings (as customer)
+  // Delete user's bookings (as customer - bookings they made for other properties)
   await Booking.deleteMany({ customer: id });
   
   // Delete user's reviews
@@ -80,6 +87,6 @@ module.exports.deleteUser = async (req, res) => {
   // Delete the user
   await User.findByIdAndDelete(id);
   
-  req.flash("success", "User account and associated data deleted!");
+  req.flash("success", "User account and all associated data deleted!");
   res.redirect("/users/admin/users");
 };
